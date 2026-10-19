@@ -69,7 +69,11 @@ if (seedFlag) {
   catch (e) { log('seed_hospital command not available yet; skipping.'); }
 }
 
-// 9. frontend deps
+// 9. root deps (concurrently)
+log('Installing root deps...');
+run('npm install', { cwd: root });
+
+// 10. frontend deps
 if (fs.existsSync(path.join(frontend, 'package.json'))) {
   log('Installing frontend deps...');
   run('npm install', { cwd: frontend });
