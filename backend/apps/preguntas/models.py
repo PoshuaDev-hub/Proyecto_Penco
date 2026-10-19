@@ -11,7 +11,7 @@ class Pregunta(models.Model):
         (DIFICULTAD_ALTA, 'Alta'),
     ]
 
-    texto = models.TextField('Texto de la pregunta', db_index=True)
+    texto = models.TextField('Texto de la pregunta')
     competencia = models.CharField('Competencia', max_length=120, db_index=True, blank=True)
     dificultad = models.CharField('Dificultad', max_length=10, choices=DIFICULTAD_CHOICES,
                                  default=DIFICULTAD_MEDIA, db_index=True)

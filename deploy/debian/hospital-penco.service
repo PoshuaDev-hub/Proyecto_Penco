@@ -1,13 +1,13 @@
 [Unit]
-Description=Hospital Penco Lirquen RRHH - Gunicorn
+Description=Hospital_Penco_IA - Gunicorn Backend Service
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/hospital-penco-lirquen/backend
-Environment="PATH=/opt/hospital-penco-lirquen/backend/venv/bin"
-ExecStart=/opt/hospital-penco-lirquen/backend/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3
+WorkingDirectory=/opt/Hospital_Penco_IA/backend
+Environment="PATH=/opt/Hospital_Penco_IA/backend/venv/bin"
+ExecStart=/opt/Hospital_Penco_IA/backend/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3
 Restart=always
 RestartSec=5
 

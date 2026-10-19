@@ -1,16 +1,13 @@
 {
-  "name": "sistema-reclutamiento-hospital-penco-lirquen",
+  "name": "Hospital_Penco_IA",
   "version": "1.0.0",
   "private": true,
-  "description": "Plataforma de Gestion de Reclutamiento Abreviado - RRHH Hospital Penco Lirquen (Django + PostgreSQL/SQLite + Frontend)",
+  "description": "Sistema de Gestion de Reclutamiento y Seleccion Psicolaboral Abreviada - RRHH Hospital Penco Lirquen (Django + React + PostgreSQL/SQLite)",
   "scripts": {
-    "verify": "node scripts/preflight-check.js",
-    "predev": "npm run verify",
-    "dev": "concurrently -n \"DJANGO-BACK,WEB-FRONT\" -c \"bgGreen.bold,bgBlue.bold\" \"npm run start:back\" \"npm run start:front\"",
-    "predemo": "npm run verify -- --seed",
-    "demo": "concurrently -n \"DEMO-BACK,DEMO-FRONT\" -c \"bgMagenta.bold,bgCyan.bold\" \"npm run start:back\" \"npm run start:front\"",
-    "prestart": "npm run verify -- --seed",
-    "start": "npm run demo",
+    "setup": "node scripts/setup.js",
+    "verify": "node scripts/setup.js",
+    "start": "node scripts/launch.js",
+    "dev": "node scripts/launch.js",
     "start:back": "node scripts/start-backend.js",
     "start:front": "node scripts/start-frontend.js"
   },
