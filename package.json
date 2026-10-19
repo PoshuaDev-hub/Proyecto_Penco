@@ -1,0 +1,20 @@
+{
+  "name": "sistema-reclutamiento-hospital-penco-lirquen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma de Gestion de Reclutamiento Abreviado - RRHH Hospital Penco Lirquen (Django + PostgreSQL/SQLite + Frontend)",
+  "scripts": {
+    "verify": "node scripts/preflight-check.js",
+    "predev": "npm run verify",
+    "dev": "concurrently -n \"DJANGO-BACK,WEB-FRONT\" -c \"bgGreen.bold,bgBlue.bold\" \"npm run start:back\" \"npm run start:front\"",
+    "predemo": "npm run verify -- --seed",
+    "demo": "concurrently -n \"DEMO-BACK,DEMO-FRONT\" -c \"bgMagenta.bold,bgCyan.bold\" \"npm run start:back\" \"npm run start:front\"",
+    "prestart": "npm run verify -- --seed",
+    "start": "npm run demo",
+    "start:back": "cd backend && python manage.py runserver 0.0.0.0:8000",
+    "start:front": "cd frontend && npm run dev -- --host"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
