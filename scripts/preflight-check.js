@@ -58,7 +58,7 @@ if (!fs.existsSync(manage)) {
 
 // 7. migrations
 log('Running makemigrations...');
-run(`"${vp}" manage.py makemigrations --noinput`, { cwd: backend });
+run(`"${vp}" manage.py makemigrations seleccion pautas preguntas --noinput`, { cwd: backend });
 log('Running migrate...');
 run(`"${vp}" manage.py migrate --noinput`, { cwd: backend });
 
