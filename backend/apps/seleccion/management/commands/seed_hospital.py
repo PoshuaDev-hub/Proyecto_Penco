@@ -27,8 +27,8 @@ def run_seed():
         return u
 
     admin = get_user('admin', 'admin@hospital.cl', 'admin123', ['Admin'], True, True)
-    carolina = get_user('carolina.ruiz', 'carolina@hospital.cl', 'rrhh123', ['RRHH'], True)
-    maria = get_user('maria.jose', 'maria@hospital.cl', 'rrhh123', ['RRHH'], True)
+    carolina = get_user('carolina.ruiz', 'carolina@hospital.cl', 'penco2026', ['RRHH'], True)
+    maria = get_user('maria.jose', 'maria@hospital.cl', 'penco2026', ['RRHH'], True)
     psico = get_user('psicologa', 'psico@hospital.cl', 'psico123', ['Psicologo'], True)
     comite = get_user('comite1', 'comite@hospital.cl', 'comite123', ['Comite'])
 
