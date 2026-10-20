@@ -247,10 +247,20 @@ export default function App() {
   });
 
   // Headers con Token para asegurar todas las llamadas REST
-  const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(currentUser?.token ? { Authorization: `Token ${currentUser.token}` } : {}),
-  });
+  const getAuthHeaders = () => {
+    let token = currentUser?.token;
+    if (!token) {
+      try {
+        token = JSON.parse(localStorage.getItem('hospital_user') || '{}').token;
+      } catch {
+        token = null;
+      }
+    }
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Token ${token}` } : {}),
+    };
+  };
 
   // Carga inicial y chequeo de salud
   useEffect(() => {
@@ -268,11 +278,11 @@ export default function App() {
     setLoading(true);
     try {
       const [resProc, resPerfiles, resPost, resPreg, resAudit] = await Promise.all([
-        fetch(`${API_BASE}/procesos/`).then((r) => r.json()).catch(() => []),
-        fetch(`${API_BASE}/perfiles-cargo/`).then((r) => r.json()).catch(() => []),
-        fetch(`${API_BASE}/postulaciones/`).then((r) => r.json()).catch(() => []),
-        fetch(`${API_BASE}/preguntas/`).then((r) => r.json()).catch(() => []),
-        fetch(`${API_BASE}/auditoria/`).then((r) => r.json()).catch(() => []),
+        fetch(`${API_BASE}/procesos/`, { headers: getAuthHeaders() }).then((r) => r.json()).catch(() => []),
+        fetch(`${API_BASE}/perfiles-cargo/`, { headers: getAuthHeaders() }).then((r) => r.json()).catch(() => []),
+        fetch(`${API_BASE}/postulaciones/`, { headers: getAuthHeaders() }).then((r) => r.json()).catch(() => []),
+        fetch(`${API_BASE}/preguntas/`, { headers: getAuthHeaders() }).then((r) => r.json()).catch(() => []),
+        fetch(`${API_BASE}/auditoria/`, { headers: getAuthHeaders() }).then((r) => r.json()).catch(() => []),
       ]);
 
       const procList = Array.isArray(resProc) ? resProc : (resProc.results || []);
@@ -392,6 +402,7 @@ export default function App() {
       setActiveTab('dashboard');
       registrarAuditoria('INICIO_SESION', `Acceso seguro con Token: ${userObj.nombre} (${userObj.rol})`);
       addToast('success', 'Sesión Iniciada', `Bienvenido/a al Hospital Penco ERP, ${userObj.nombre}.`);
+      cargarDatos();
     });
   };
 

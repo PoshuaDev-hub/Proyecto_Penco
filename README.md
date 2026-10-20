@@ -44,6 +44,37 @@ npm run dev
 
 ---
 
+## 🔐 Modelo de Seguridad y Roles (RBAC)
+
+El backend exige **autenticación por token** en todos los endpoints (excepto `login` y `health`) y aplica roles mediante grupos de Django:
+
+| Grupo | Rol | Alcance |
+| :--- | :--- | :--- |
+| `Admin` | Administrador global | Acceso total + panel `/admin/` |
+| `RRHH` | Jefatura de Desarrollo de Personas | Apertura de procesos, mantenedores y auditoría |
+| `Psicologo` | Psicólogo/a Laboral | Pautas de abordaje, banco de preguntas y evaluaciones |
+| `Comite` | Comisión Evaluadora | Mesa de revisión curricular y registro de acuerdos |
+
+Reglas de integridad aplicadas en el ORM:
+- `PROTECT` en catálogos maestros (`PerfilCargo`, `Postulante`, `Usuario`, `PautaAbordaje`) para impedir borrados que destruyan historial.
+- `CASCADE` en composiciones estrictas (`Plantilla → Etapa → Pauta`, `Proceso → Postulación → Documento`).
+- `SET_NULL` en autorreferencias (`Pregunta.madre`) para no romper el banco al editar una pregunta.
+- **Auditoría append-only**: el registro de auditoría no admite `PUT/PATCH/DELETE` y se firma con el usuario autenticado.
+
+Credenciales de demostración (generadas por `npm run setup`):
+`admin/admin123` · `carolina.ruiz/penco2026` · `maria.jose/penco2026` · `psicologa/psico123` · `comite1/comite123`
+
+---
+
+## 🧪 Verificación y Pruebas
+
+```bash
+npm run verify   # preflight idempotente: entorno, venv, migraciones, seeds
+npm test         # suite Django (modelos, auth, transiciones, auditoría) + build de producción
+```
+
+---
+
 ## 📂 Estructura del Monorepo
 ```
 Hospital_Penco_IA/

@@ -311,6 +311,14 @@ npm run dev
 ### Credenciales Institucionales de Prueba:
 - **Administrador Global:** Usuario: `admin` | Contraseña: `admin123`
 - **Jefatura RRHH:** Usuario: `carolina.ruiz` | Contraseña: `penco2026`
+- **Psicóloga Laboral:** Usuario: `psicologa` | Contraseña: `psico123`
+- **Comisión Evaluadora:** Usuario: `comite1` | Contraseña: `comite123`
+
+### Verificación de Calidad (pre-demo):
+```bash
+npm run verify   # Preflight idempotente: entorno, venv, migraciones y seeds
+npm test         # Suite Django + build de producción del frontend
+```
 
 ---
 

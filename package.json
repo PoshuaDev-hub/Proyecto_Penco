@@ -5,9 +5,14 @@
   "description": "Sistema de Gestion de Reclutamiento y Seleccion Psicolaboral Abreviada - RRHH Hospital Penco Lirquen (Django + React + PostgreSQL/SQLite)",
   "scripts": {
     "setup": "node scripts/setup.js",
-    "verify": "node scripts/setup.js",
+    "verify": "node scripts/preflight-check.js",
+    "preflight": "node scripts/preflight-check.js",
     "start": "node scripts/launch.js",
     "dev": "node scripts/launch.js",
+    "demo": "node scripts/launch.js",
+    "test:back": "node scripts/test-backend.js",
+    "test:front": "cd frontend && npm run build",
+    "test": "npm run test:back && npm run test:front",
     "start:back": "node scripts/start-backend.js",
     "start:front": "node scripts/start-frontend.js"
   },

@@ -1,82 +1,14 @@
-const { execSync, spawnSync } = require('child_process');
-const fs = require('fs');
+/**
+ * preflight-check.js - Verificacion de entorno previa al arranque.
+ * Delega en scripts/setup.js para mantener una unica fuente de verdad
+ * (evita divergencia entre dos implementaciones de preflight).
+ */
 const path = require('path');
+const { spawnSync } = require('child_process');
 
-const root = path.resolve(__dirname, '..');
-const backend = path.join(root, 'backend');
-const frontend = path.join(root, 'frontend');
-const seedFlag = process.argv.includes('--seed');
+const result = spawnSync(process.execPath, [path.join(__dirname, 'setup.js')], {
+  stdio: 'inherit',
+  cwd: path.resolve(__dirname, '..'),
+});
 
-function log(msg) { console.log(`[preflight] ${msg}`); }
-function run(cmd, opts = {}) {
-  console.log(`[preflight] $ ${cmd}`);
-  execSync(cmd, { stdio: 'inherit', cwd: opts.cwd || root, ...opts });
-}
-
-function venvPython() {
-  if (process.platform === 'win32') return path.join(backend, 'venv', 'Scripts', 'python.exe');
-  return path.join(backend, 'venv', 'bin', 'python');
-}
-
-// 1. Node
-log(`Node ${process.version}`);
-// 2. Python
-let pyCmd = 'python';
-try { execSync('python --version', { stdio: 'ignore' }); }
-catch (e) { try { execSync('python3 --version', { stdio: 'ignore' }); pyCmd = 'python3'; } catch (e2) { console.error('Python not found'); process.exit(1); } }
-log(`Python command: ${pyCmd}`);
-
-// 3. venv
-const vp = venvPython();
-if (!fs.existsSync(vp)) {
-  log('Creating virtualenv...');
-  run(`${pyCmd} -m venv venv`, { cwd: backend });
-}
-// 4. requirements
-const req = path.join(backend, 'requirements.txt');
-if (fs.existsSync(req)) {
-  log('Installing backend requirements...');
-  run(`"${vp}" -m pip install --upgrade pip`, { cwd: backend });
-  run(`"${vp}" -m pip install -r requirements.txt`, { cwd: backend });
-} else {
-  log('No requirements.txt found, skipping pip install.');
-}
-
-// 5. .env
-const envPath = path.join(backend, '.env');
-if (!fs.existsSync(envPath)) {
-  log('Creating default .env');
-  fs.writeFileSync(envPath, 'DEBUG=True\nSECRET_KEY=dev-secret-key-change-me\nDATABASE_URL=sqlite:///db.sqlite3\nALLOWED_HOSTS=*\n');
-}
-
-// 6. manage.py check
-const manage = path.join(backend, 'manage.py');
-if (!fs.existsSync(manage)) {
-  log('manage.py not found yet (Fase 1 skeleton). Skipping Django steps.');
-  process.exit(0);
-}
-
-// 7. migrations
-log('Running makemigrations...');
-run(`"${vp}" manage.py makemigrations seleccion pautas preguntas --noinput`, { cwd: backend });
-log('Running migrate...');
-run(`"${vp}" manage.py migrate --noinput`, { cwd: backend });
-
-// 8. seed
-if (seedFlag) {
-  const seedCmd = `"${vp}" manage.py seed_hospital`;
-  try { run(seedCmd, { cwd: backend }); }
-  catch (e) { log('seed_hospital command not available yet; skipping.'); }
-}
-
-// 9. root deps (concurrently)
-log('Installing root deps...');
-run('npm install', { cwd: root });
-
-// 10. frontend deps
-if (fs.existsSync(path.join(frontend, 'package.json'))) {
-  log('Installing frontend deps...');
-  run('npm install', { cwd: frontend });
-}
-
-log('Preflight OK.');
+process.exit(result.status ?? 1);
