@@ -1,0 +1,12 @@
+/* ==========================================================================
+   css_main.css - Sistema Modular de Estilos ERP (Hospital_Penco_IA)
+   Estructura inspirada en la arquitectura limpia de AdminLTE 3 / Enterprise ERP
+   ========================================================================== */
+
+@import './css_variables.css';
+@import './css_layout.css';
+@import './css_login.css';
+@import './css_dashboard.css';
+@import './css_mantenedores.css';
+@import './css_adaptive.css';
+@import './css_modals.css';

@@ -1,0 +1,74 @@
+:root {
+  --font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  /* Paleta Corporativa Hospitalaria / ERP */
+  --erp-bg-body: #f4f6f9;
+  --erp-bg-card: #ffffff;
+  --erp-bg-header: #ffffff;
+  --erp-bg-sidebar: #1e293b;
+  --erp-bg-sidebar-hover: #334155;
+  --erp-bg-sidebar-active: #0284c7;
+  
+  --erp-text-main: #212529;
+  --erp-text-muted: #6c757d;
+  --erp-text-light: #f8fafc;
+  --erp-text-sidebar: #cbd5e1;
+  
+  /* Colores de Estado Institucionales */
+  --erp-primary: #0284c7;
+  --erp-primary-hover: #0369a1;
+  --erp-primary-light: #e0f2fe;
+  
+  --erp-secondary: #64748b;
+  --erp-success: #16a34a;
+  --erp-success-light: #dcfce7;
+  --erp-info: #0284c7;
+  --erp-info-light: #e0f2fe;
+  --erp-warning: #d97706;
+  --erp-warning-light: #fef3c7;
+  --erp-danger: #dc2626;
+  --erp-danger-light: #fee2e2;
+  
+  --erp-border: #e2e8f0;
+  --erp-border-dark: #cbd5e1;
+  
+  --erp-radius-xs: 3px;
+  --erp-radius-sm: 4px;
+  --erp-radius-md: 6px;
+  --erp-radius-lg: 8px;
+  
+  --erp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --erp-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --erp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --erp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  
+  --erp-sidebar-width: 260px;
+  --erp-navbar-height: 56px;
+}
+
+/* Modo Oscuro Corporativo */
+.app.dark {
+  --erp-bg-body: #0b1120;
+  --erp-bg-card: #131d31;
+  --erp-bg-header: #0f172a;
+  --erp-bg-sidebar: #0f172a;
+  --erp-bg-sidebar-hover: #1e293b;
+  --erp-bg-sidebar-active: #0284c7;
+  
+  --erp-text-main: #f1f5f9;
+  --erp-text-muted: #94a3b8;
+  --erp-text-light: #ffffff;
+  --erp-text-sidebar: #cbd5e1;
+  
+  --erp-border: #1e293b;
+  --erp-border-dark: #334155;
+  
+  --erp-primary-light: rgba(2, 132, 199, 0.2);
+  --erp-success-light: rgba(22, 163, 74, 0.2);
+  --erp-warning-light: rgba(217, 119, 6, 0.2);
+  --erp-danger-light: rgba(220, 38, 38, 0.2);
+  
+  --erp-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+  --erp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --erp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+}

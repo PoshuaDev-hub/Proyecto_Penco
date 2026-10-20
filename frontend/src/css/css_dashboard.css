@@ -1,0 +1,211 @@
+/* ================= SMALL-BOX STATS (AdminLTE 3 / ERP Standard) ================= */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.small-box {
+  border-radius: var(--erp-radius-md);
+  position: relative;
+  display: block;
+  margin-bottom: 0;
+  box-shadow: var(--erp-shadow);
+  color: #ffffff;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.small-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--erp-shadow-md);
+}
+
+.small-box.bg-info {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+}
+
+.small-box.bg-warning {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.small-box.bg-success {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.small-box.bg-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.small-box .inner {
+  padding: 18px 20px 14px 20px;
+}
+
+.small-box .inner h3 {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+}
+
+.small-box .inner p {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.small-box .icon {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 0;
+  font-size: 54px;
+  color: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.small-box .icon svg {
+  width: 50px;
+  height: 50px;
+}
+
+.small-box-footer {
+  position: relative;
+  text-align: center;
+  padding: 6px 0;
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.12);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: background 0.15s ease;
+}
+
+.small-box-footer:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+}
+
+/* ================= WELCOME BANNER ================= */
+.erp-alert-banner {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-left: 4px solid var(--erp-primary);
+  border-radius: var(--erp-radius-md);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  box-shadow: var(--erp-shadow-sm);
+}
+
+.erp-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.erp-alert-icon {
+  color: var(--erp-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.erp-alert-text {
+  font-size: 13px;
+  color: var(--erp-text-main);
+}
+
+.erp-alert-text strong {
+  color: var(--erp-primary);
+}
+
+/* ================= PIPELINE TRACK (10 ETAPAS NORMATIVAS) ================= */
+.pipeline-card {
+  margin-top: 14px;
+}
+
+.pipeline-stepper {
+  display: flex;
+  overflow-x: auto;
+  gap: 6px;
+  padding: 16px 0 8px 0;
+  scrollbar-width: thin;
+}
+
+.pipeline-step-box {
+  flex: 1;
+  min-width: 110px;
+  background: var(--erp-bg-body);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-sm);
+  padding: 10px 8px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.pipeline-step-box.completed {
+  background: var(--erp-success-light);
+  border-color: var(--erp-success);
+}
+
+.pipeline-step-box.current {
+  background: var(--erp-primary-light);
+  border-color: var(--erp-primary);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+
+.step-num-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--erp-border-dark);
+  color: var(--erp-text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.pipeline-step-box.completed .step-num-badge {
+  background: var(--erp-success);
+  color: #fff;
+}
+
+.pipeline-step-box.current .step-num-badge {
+  background: var(--erp-primary);
+  color: #fff;
+}
+
+.step-title {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--erp-text-main);
+  margin-bottom: 3px;
+}
+
+.step-desc {
+  font-size: 10px;
+  color: var(--erp-text-muted);
+  line-height: 1.2;
+}

@@ -56,7 +56,19 @@ Hospital_Penco_IA/
 │   ├── requirements.txt # Dependencias Python
 │   └── manage.py
 ├── frontend/
-│   ├── src/             # Componentes React, interfaz de mesa de evaluación, árbol interactivo
+│   ├── src/
+│   │   ├── components/  # Iconos SVG vectoriales profesionales (Icons.jsx)
+│   │   ├── css/         # Arquitectura CSS modular estilo ERP (css_*.css)
+│   │   │   ├── css_variables.css
+│   │   │   ├── css_layout.css
+│   │   │   ├── css_login.css
+│   │   │   ├── css_dashboard.css
+│   │   │   ├── css_mantenedores.css
+│   │   │   ├── css_adaptive.css
+│   │   │   ├── css_modals.css
+│   │   │   └── css_main.css
+│   │   ├── App.jsx      # Interfaz ERP (AdminLTE 3 Style): Sidebar, Navbar, Mantenedores
+│   │   └── main.jsx
 │   ├── index.html
 │   └── package.json
 ├── scripts/

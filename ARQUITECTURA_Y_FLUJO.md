@@ -24,6 +24,32 @@ Una plataforma web moderna, resiliente y segura concebida para:
 - Registrar una **pista de auditoría inmutable** de cada acuerdo de la comisión.
 - Preparar la integración con un **módulo de Inteligencia Artificial (RAG)** para asistir a la psicóloga laboral en el diseño de preguntas de incidentes críticos.
 
+### 👥 Definición de Usuarios del Sistema: ¿Quiénes son?
+> **Claridad de Dominio:** Este sistema **NO es un software clínico ni atiende pacientes enfermos** (no gestiona fichas médicas, Rayen ni citas). Su dominio es exclusivamente la **Gestión de Personas y Contratación Pública (Ley 18.834 / Estatuto Administrativo)** en el Hospital Penco Lirquén.
+> 
+> **Todos los usuarios son PROFESIONALES**, agrupados en dos estamentos:
+> 1. **Usuarios Institucionales (Equipo Evaluador y Directivo del Hospital):**
+>    - **Jefatura de RR.HH. / Desarrollo de las Personas (Carolina Ruiz Parra):** Apertura de procesos, definición de bases, supervisión de etapas y formalización de contratos.
+>    - **Psicólogo/a Laboral:** Creación de pautas de entrevista, banco de preguntas por incidentes críticos y rúbricas adaptativas.
+>    - **Comisión de Selección y Jefaturas Médicas (UCI, SOME, Urgencias):** Revisión colegiada de expedientes (semáforo documental) y entrevistas técnicas.
+>    - **Directora del Hospital:** Recepción de la terna final colegiada y firma de la Resolución Exenta de nombramiento.
+>    - **Administrador Global TI:** Soporte, gestión de cuentas y control de la pista de auditoría inmutable.
+> 2. **Postulantes (Personal de la Salud):**
+>    - Profesionales y técnicos (médicos, enfermeros, TENS, administrativos) que postulan a concursos públicos abreviados o reemplazos prolongados.
+
+### 🔐 Portal de Inicio de Sesión Institucional (Token-Based Security)
+El sistema cuenta en su frontend con un **Portal de Inicio de Sesión Institucional** (Servicio de Salud Talcahuano &bull; Hospital Penco Lirquén) protegido por **Tokens de Seguridad Criptográficos** emitidos por Django REST Framework (`rest_framework.authtoken`):
+- **Autenticación con Token:** Al iniciar sesión (`POST /api/auth/login/`), el backend verifica credenciales con Django Auth y emite un `token` único. Todas las peticiones fetch subsecuentes inyectan el encabezado seguro `Authorization: Token <key>`.
+- **Selector Rápido de Perfiles de Prueba:** Cuadrícula 2x2 para seleccionar de inmediato los roles habilitados (*Carolina Ruiz, Psicólogo/a Laboral, Comisión Evaluadora, Administrador TI*).
+
+### 🔄 Arquitectura de Mantenedores Intuitivos en Cascada (ERP)
+Siguiendo los principios de software de gestión empresarial (ERP), los mantenedores operan en **cascada relacional**:
+1. **Catálogo Maestro de Perfiles de Cargo (Origen de Cascada):** Define los requisitos mínimos de la Ley 18.834, competencias clave y área asistencial.
+2. **Mantenedor de Concursos (Cascada Perfil → Proceso):** Al seleccionar un perfil de cargo, el sistema autocompleta en cascada los descriptores, área clínica y pauta reglamentaria de 10 etapas.
+3. **Mesa de Postulantes (Cascada Concurso → Candidatos):** Filtrado dependiente del concurso activo para aislar nóminas, semáforo documental SIS y acuerdos colegiados.
+4. **Banco de Preguntas Adaptativas (Cascada Madre → Hijas):** Ramificación en árbol condicional en cascada según calificación observada (< 3.0 activa contención; ≥ 4.0 activa liderazgo).
+5. **Pista de Auditoría Transversal:** Cada mutación efectuada por el usuario autenticado viaja firmada con su token y se estampa en la bitácora legal.
+
 ---
 
 ## 2. Diagrama de Arquitectura de Software

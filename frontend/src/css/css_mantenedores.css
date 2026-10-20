@@ -1,0 +1,298 @@
+/* ================= MANTENEDORES Y TABLAS (AdminLTE 3 / ERP Standard) ================= */
+.card-erp {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  box-shadow: var(--erp-shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-erp.card-outline-primary {
+  border-top: 3px solid var(--erp-primary);
+}
+
+.card-erp.card-outline-success {
+  border-top: 3px solid var(--erp-success);
+}
+
+.card-header-erp {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--erp-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--erp-bg-card);
+}
+
+.card-title-erp {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--erp-text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-body-erp {
+  padding: 20px;
+}
+
+/* Tablas DataTables Style */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-erp {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--erp-text-main);
+}
+
+.table-erp th,
+.table-erp td {
+  padding: 11px 14px;
+  vertical-align: middle;
+  border-top: 1px solid var(--erp-border);
+  text-align: left;
+}
+
+.table-erp thead th {
+  background: var(--erp-bg-body);
+  border-bottom: 2px solid var(--erp-border);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--erp-text-muted);
+}
+
+.table-erp-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+.app.dark .table-erp-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.table-erp-hover tbody tr:hover {
+  background-color: rgba(2, 132, 199, 0.04);
+}
+
+/* Botones ERP */
+.btn-erp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--erp-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-erp-sm {
+  padding: 5px 10px;
+  font-size: 11px;
+  border-radius: var(--erp-radius-xs);
+}
+
+.btn-erp-primary {
+  background: var(--erp-primary);
+  color: #fff;
+}
+
+.btn-erp-primary:hover {
+  background: var(--erp-primary-hover);
+}
+
+.btn-erp-secondary {
+  background: var(--erp-bg-body);
+  border-color: var(--erp-border-dark);
+  color: var(--erp-text-main);
+}
+
+.btn-erp-secondary:hover {
+  background: var(--erp-border);
+}
+
+.btn-erp-success {
+  background: var(--erp-success);
+  color: #fff;
+}
+
+.btn-erp-success:hover {
+  background: #15803d;
+}
+
+.btn-erp-warning {
+  background: var(--erp-warning);
+  color: #fff;
+}
+
+.btn-erp-warning:hover {
+  background: #b45309;
+}
+
+.btn-erp-danger {
+  background: var(--erp-danger);
+  color: #fff;
+}
+
+.btn-erp-danger:hover {
+  background: #b91c1c;
+}
+
+.btn-erp-outline-danger {
+  background: transparent;
+  border-color: var(--erp-danger);
+  color: var(--erp-danger);
+}
+
+.btn-erp-outline-danger:hover {
+  background: var(--erp-danger-light);
+}
+
+/* Badges de Estado */
+.badge-erp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--erp-radius-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-erp-primary {
+  background: var(--erp-primary-light);
+  color: var(--erp-primary);
+}
+
+.badge-erp-success {
+  background: var(--erp-success-light);
+  color: var(--erp-success);
+}
+
+.badge-erp-warning {
+  background: var(--erp-warning-light);
+  color: var(--erp-warning);
+}
+
+.badge-erp-danger {
+  background: var(--erp-danger-light);
+  color: var(--erp-danger);
+}
+
+/* Layout Split para Mantenedores y Detalle */
+.layout-split-erp {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 20px;
+}
+
+@media (max-width: 991px) {
+  .layout-split-erp {
+    grid-template-columns: 1fr;
+  }
+}
+
+.candidate-card-erp {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.candidate-card-erp:hover {
+  border-color: var(--erp-primary);
+  background: var(--erp-bg-body);
+}
+
+.candidate-card-erp.active {
+  border-color: var(--erp-primary);
+  border-left: 4px solid var(--erp-primary);
+  background: var(--erp-primary-light);
+}
+
+.doc-status-pill {
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--erp-radius-xs);
+  font-weight: 600;
+}
+
+.doc-status-pill.ok {
+  background: var(--erp-success-light);
+  color: var(--erp-success);
+}
+
+.doc-status-pill.pending {
+  background: var(--erp-danger-light);
+  color: var(--erp-danger);
+}
+
+/* Indicadores de Seguridad por Token y Cascada */
+.token-badge-erp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  background: var(--erp-bg-body);
+  border: 1px solid var(--erp-border);
+  padding: 3px 8px;
+  border-radius: var(--erp-radius-xs);
+  color: var(--erp-text-muted);
+}
+
+.cascade-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--erp-primary);
+  background: var(--erp-primary-light);
+  padding: 3px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.table-toolbar-erp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+  background: var(--erp-bg-body);
+  padding: 10px 14px;
+  border-radius: var(--erp-radius-sm);
+  border: 1px solid var(--erp-border);
+}
+

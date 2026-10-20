@@ -1,0 +1,166 @@
+/* ================= ÁRBOL ADAPTATIVO & SIMULADOR (AdminLTE Style) ================= */
+.tree-container-erp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.tree-node-erp {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  padding: 16px 20px;
+  max-width: 650px;
+  width: 100%;
+  box-shadow: var(--erp-shadow-sm);
+  position: relative;
+}
+
+.tree-node-erp.root-node-erp {
+  border-top: 3px solid var(--erp-primary);
+}
+
+.node-header-erp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.node-level-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--erp-primary);
+  background: var(--erp-primary-light);
+  padding: 2px 8px;
+  border-radius: var(--erp-radius-xs);
+}
+
+.node-competence-erp {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--erp-text-main);
+}
+
+.node-text-erp {
+  font-size: 14px;
+  color: var(--erp-text-main);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.tree-connector-erp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 14px 0;
+  color: var(--erp-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tree-line-v {
+  width: 2px;
+  height: 20px;
+  background: var(--erp-border-dark);
+}
+
+.tree-children-grid-erp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  width: 100%;
+  max-width: 900px;
+}
+
+@media (max-width: 768px) {
+  .tree-children-grid-erp {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tree-child-node-erp {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  padding: 16px;
+  box-shadow: var(--erp-shadow-sm);
+}
+
+.tree-child-node-erp.branch-low {
+  border-top: 3px solid var(--erp-warning);
+}
+
+.tree-child-node-erp.branch-high {
+  border-top: 3px solid var(--erp-success);
+}
+
+/* Simulador de Entrevista */
+.simulator-box-erp {
+  background: var(--erp-bg-body);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.slider-group-erp {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 16px 0;
+}
+
+.slider-header-erp {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.score-badge-large {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--erp-primary);
+}
+
+.slider-range-erp {
+  width: 100%;
+  accent-color: var(--erp-primary);
+  cursor: pointer;
+}
+
+/* AI Assistant Card */
+.ai-module-card {
+  background: var(--erp-bg-card);
+  border: 1px solid var(--erp-border);
+  border-top: 3px solid #8b5cf6;
+  border-radius: var(--erp-radius-md);
+  padding: 24px;
+}
+
+.ai-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  padding: 4px 10px;
+  border-radius: var(--erp-radius-xs);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.algo-info-card {
+  background: var(--erp-bg-body);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-md);
+  padding: 16px;
+  margin: 14px 0;
+}
