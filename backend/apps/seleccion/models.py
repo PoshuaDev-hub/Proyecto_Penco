@@ -33,19 +33,18 @@ class ProcesoSeleccion(models.Model):
     ESTADO_PSICO = 'evaluacion_psicolaboral'
     ESTADO_INFORME = 'informe_directora'
     ESTADO_INTEGRACION = 'integracion'
-    ESTADO_CERRADO = 'cerrado'
 
+    # 9 Etapas oficiales del DESAFIO_PROYECTO_ABP.pdf (Pag. 3)
     ESTADO_CHOICES = [
-        (ESTADO_SOLICITUD, 'Solicitud de llamado'),
-        (ESTADO_PERFIL, 'Preparacion de perfil'),
-        (ESTADO_AVISO, 'Aviso de postulacion'),
-        (ESTADO_RECEPCION, 'Recepcion de postulaciones'),
-        (ESTADO_REVISION, 'Revision curricular'),
-        (ESTADO_ENTREVISTAS, 'Entrevistas tecnicas'),
-        (ESTADO_PSICO, 'Evaluacion psicolaboral'),
-        (ESTADO_INFORME, 'Informe a la Directora'),
-        (ESTADO_INTEGRACION, 'Proceso de integracion'),
-        (ESTADO_CERRADO, 'Cerrado'),
+        (ESTADO_SOLICITUD,   'Solicitud de Llamado'),
+        (ESTADO_PERFIL,      'Perfil del Cargo'),
+        (ESTADO_AVISO,       'Aviso de Postulacion'),
+        (ESTADO_RECEPCION,   'Recepcion de Antecedentes'),
+        (ESTADO_REVISION,    'Revision Curricular en Comite'),
+        (ESTADO_ENTREVISTAS, 'Entrevistas Tecnicas'),
+        (ESTADO_PSICO,       'Evaluacion Psicolaboral'),
+        (ESTADO_INFORME,     'Informe a la Directora'),
+        (ESTADO_INTEGRACION, 'Integracion y Cierre'),
     ]
 
     perfil_cargo = models.ForeignKey(

@@ -1,0 +1,210 @@
+/* ===============================================================
+   css_splash.css - Pantalla de Carga Institucional (Post-Login)
+   Hospital_Penco_IA | Servicio de Salud Talcahuano
+   =============================================================== */
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0284c7 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.splash-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: splash-grid-drift 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes splash-grid-drift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+
+.splash-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: splash-pulse-glow 3s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes splash-pulse-glow {
+  from { transform: scale(0.85); opacity: 0.6; }
+  to   { transform: scale(1.15); opacity: 1; }
+}
+
+.splash-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.splash-logo-box {
+  width: 90px;
+  height: 90px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  margin-bottom: 28px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.08);
+  animation: splash-logo-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes splash-logo-in {
+  from { transform: scale(0.4) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.splash-institution {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.9);
+  margin-bottom: 8px;
+  animation: splash-fade-up 0.5s ease 0.3s both;
+}
+
+.splash-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  text-align: center;
+  animation: splash-fade-up 0.5s ease 0.45s both;
+}
+
+.splash-title span { color: #7dd3fc; }
+
+.splash-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 48px;
+  text-align: center;
+  animation: splash-fade-up 0.5s ease 0.55s both;
+}
+
+@keyframes splash-fade-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.splash-progress-wrap {
+  width: 300px;
+  animation: splash-fade-up 0.5s ease 0.65s both;
+}
+
+.splash-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.splash-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #0284c7, #38bdf8);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  animation: splash-bar-shimmer 1.5s linear infinite;
+  transition: width 0.3s ease;
+}
+
+@keyframes splash-bar-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.splash-status-text {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.04em;
+  min-height: 18px;
+  transition: opacity 0.3s ease;
+}
+
+.splash-modules {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 28px;
+  animation: splash-fade-up 0.5s ease 0.9s both;
+}
+
+.splash-module-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: all 0.4s ease;
+}
+
+.splash-module-chip.loaded {
+  color: #86efac;
+  background: rgba(134, 239, 172, 0.08);
+  border-color: rgba(134, 239, 172, 0.3);
+}
+
+.splash-module-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.splash-footer-text {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.04em;
+  z-index: 1;
+}
+
+.splash-screen.exiting {
+  animation: splash-exit 0.5s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes splash-exit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.04); }
+}
