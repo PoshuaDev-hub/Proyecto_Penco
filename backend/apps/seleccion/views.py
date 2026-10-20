@@ -43,3 +43,7 @@ class HitoProcesoViewSet(viewsets.ModelViewSet):
 class RegistroAuditoriaViewSet(viewsets.ModelViewSet):
     queryset = RegistroAuditoria.objects.all()
     serializer_class = RegistroAuditoriaSerializer
+    http_method_names = ['get', 'post', 'head', 'options']
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)

@@ -68,6 +68,28 @@ class ProcesoSeleccion(models.Model):
         ordering = ['-creado_en']
         indexes = [models.Index(fields=['estado', 'area_usuaria'])]
 
+    TRANSICIONES = {
+        'solicitud': ['perfil'],
+        'perfil': ['aviso'],
+        'aviso': ['recepcion'],
+        'recepcion': ['revision_curricular'],
+        'revision_curricular': ['entrevistas_tecnicas'],
+        'entrevistas_tecnicas': ['evaluacion_psicolaboral'],
+        'evaluacion_psicolaboral': ['informe_directora'],
+        'informe_directora': ['integracion'],
+        'integracion': ['cerrado'],
+        'cerrado': [],
+    }
+
+    def puede_transicionar_a(self, nuevo_estado):
+        return nuevo_estado in self.TRANSICIONES.get(self.estado, [])
+
+    def transicionar(self, nuevo_estado):
+        if not self.puede_transicionar_a(nuevo_estado):
+            raise ValueError(f'Transicion invalida: {self.estado} -> {nuevo_estado}')
+        self.estado = nuevo_estado
+        self.save(update_fields=['estado', 'actualizado_en'])
+
     def __str__(self):
         return f'{self.perfil_cargo} - {self.get_estado_display()}'
 
@@ -143,7 +165,7 @@ class DocumentoPostulacion(models.Model):
         verbose_name='Postulacion', db_index=True)
     tipo = models.CharField('Tipo', max_length=30, choices=TIPO_CHOICES, default=TIPO_OTRO)
     nombre = models.CharField('Nombre', max_length=200)
-    url = models.URLField('URL', blank=True)
+    archivo = models.FileField('Archivo', upload_to='postulaciones/%Y/%m/', blank=True, null=True)
     recibido = models.BooleanField('Recibido', default=True)
     subido_en = models.DateTimeField('Subido en', auto_now_add=True)
 
