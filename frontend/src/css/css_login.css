@@ -1,51 +1,75 @@
-/* ================= LOGIN PAGE (AdminLTE 3 / Enterprise ERP Style) ================= */
+/* ==========================================================================
+   css_login.css - Estilos del Módulo de Autenticación Institucional (ERP)
+   Diseño Centrado (0,0) + Perfiles de Demostración al Lado Izquierdo Compactos
+   Sin Scroll Vertical (Strict 100vh lock)
+   ========================================================================== */
+
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 50% 25%, #f1f5f9 0%, #cbd5e1 100%);
-  padding: 30px 16px;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, #f8fafc 0%, #cbd5e1 100%);
+  padding: 16px;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .app.dark .login-page {
-  background: radial-gradient(circle at 50% 25%, #1e293b 0%, #090d16 100%);
+  background: radial-gradient(circle at 50% 40%, #1e293b 0%, #090d16 100%);
 }
 
-.login-box {
-  width: 500px;
-  max-width: 100%;
-  margin: 0 auto;
+/* ================= ESCENARIO DEL LOGIN (STAGE) ================= */
+.login-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  box-sizing: border-box;
+}
+
+/* ================= PANEL CENTRAL: FORMULARIO DE ACCESO (ORIGEN 0,0) ================= */
+.login-form-panel {
+  width: 390px;
+  max-width: 92vw;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .login-logo {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 
 .login-institution-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--erp-primary);
   background: var(--erp-primary-light);
-  padding: 5px 14px;
+  padding: 3px 10px;
   border-radius: 999px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   border: 1px solid rgba(2, 132, 199, 0.2);
 }
 
 .login-logo h1 {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--erp-text-main);
   letter-spacing: -0.02em;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
 }
 
 .login-logo h1 span {
@@ -53,62 +77,93 @@
 }
 
 .login-logo p {
-  font-size: 13px;
+  font-size: 11.5px;
   color: var(--erp-text-muted);
   margin: 0;
 }
 
-/* Card AdminLTE Style */
+/* Tarjeta Principal de Login */
 .card-login {
   background: var(--erp-bg-card);
   border: 1px solid var(--erp-border);
   border-radius: var(--erp-radius-lg);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.09), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
 .login-card-body {
-  padding: 28px 24px;
+  padding: 18px 20px;
 }
 
-.login-box-msg {
-  text-align: center;
-  font-size: 13px;
-  color: var(--erp-text-muted);
-  margin-bottom: 18px;
-  font-weight: 500;
+/* Banner de perfil preparado */
+.login-active-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--erp-primary-light);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  border-radius: var(--erp-radius-sm);
+  padding: 5px 10px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--erp-primary);
 }
 
-/* Form Input Box con icono integrado a la derecha (estilo screenshot) */
+.login-active-hint-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.login-active-hint strong {
+  font-weight: 700;
+}
+
+/* Alerta de Error */
+.login-error-alert {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 7px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form Input Box con icono integrado a la derecha */
 .erp-input-box {
   position: relative;
   width: 100%;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .erp-input-field {
   width: 100%;
-  height: 44px;
-  padding: 10px 42px 10px 14px;
-  font-size: 14px;
+  height: 38px;
+  padding: 8px 38px 8px 12px;
+  font-size: 13px;
   border: 1px solid var(--erp-border);
   border-radius: var(--erp-radius-md);
   background: var(--erp-bg-body);
   color: var(--erp-text-main);
   outline: none;
   font-family: inherit;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
 .erp-input-field:focus {
   border-color: var(--erp-primary);
   background: var(--erp-bg-card);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.18);
 }
 
 .erp-input-icon {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--erp-text-muted);
@@ -118,16 +173,16 @@
   justify-content: center;
 }
 
-/* Botón principal de login (idéntico al de la foto) */
+/* Botón principal de login */
 .btn-login-submit {
   width: 100%;
-  height: 44px;
+  height: 38px;
   background: var(--erp-primary);
   color: #ffffff;
   border: none;
   border-radius: var(--erp-radius-md);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -135,7 +190,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .btn-login-submit:hover {
@@ -144,88 +199,148 @@
   transform: translateY(-1px);
 }
 
-/* Sección de Perfiles Institucionales de Prueba (Idéntico al de la foto) */
-.login-quick-section {
-  margin-top: 24px;
-  padding-top: 18px;
+.login-security-notice {
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--erp-border);
-}
-
-.login-quick-title {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--erp-text-muted);
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  line-height: 1.25;
+  text-align: center;
 }
 
-.role-cards-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.login-footer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--erp-text-muted);
 }
 
-@media (max-width: 480px) {
-  .role-cards-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.role-card-btn {
+/* ================= PANEL IZQUIERDO: PERFILES DE PRUEBA DOCK LATERAL ================= */
+.login-profiles-sidebar {
+  position: absolute;
+  right: calc(100% + 22px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 300px;
   background: var(--erp-bg-card);
   border: 1px solid var(--erp-border);
-  border-radius: var(--erp-radius-md);
+  border-radius: var(--erp-radius-lg);
   padding: 12px 14px;
-  text-align: left;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 3;
+  box-sizing: border-box;
+}
+
+.login-profiles-header {
+  border-bottom: 1px solid var(--erp-border);
+  padding-bottom: 8px;
+}
+
+.login-profiles-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--erp-primary);
+  background: var(--erp-primary-light);
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+.login-profiles-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--erp-text-main);
+  margin: 0 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.login-profiles-subtitle {
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* Lista Vertical de Perfiles */
+.login-profiles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-profile-card {
+  background: var(--erp-bg-body);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-sm);
+  padding: 6px 10px;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: var(--erp-shadow-sm);
+  gap: 9px;
   position: relative;
+  text-align: left;
+  box-sizing: border-box;
 }
 
-.role-card-btn:hover {
+.login-profile-card:hover {
   border-color: var(--erp-primary);
   background: var(--erp-primary-light);
-  transform: translateY(-1px);
-  box-shadow: var(--erp-shadow-md);
+  transform: translateX(3px);
 }
 
-.role-card-btn.active {
+.login-profile-card.active {
   border-color: var(--erp-primary);
   background: var(--erp-primary-light);
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.28);
 }
 
-.role-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--erp-radius-sm);
-  background: var(--erp-primary);
+.login-profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 10.5px;
   font-weight: 800;
   flex-shrink: 0;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-.role-card-info {
+.login-profile-body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 2px;
 }
 
-.role-card-name {
-  font-size: 13px;
+.login-profile-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.login-profile-name {
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--erp-text-main);
   white-space: nowrap;
@@ -233,28 +348,77 @@
   text-overflow: ellipsis;
 }
 
-.role-card-title {
-  font-size: 11px;
+.login-profile-cargo-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--erp-primary);
+  background: rgba(2, 132, 199, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.app.dark .login-profile-cargo-badge {
+  background: rgba(2, 132, 199, 0.25);
+  color: #38bdf8;
+}
+
+.login-profile-desc {
+  font-size: 10.5px;
   color: var(--erp-text-muted);
+  line-height: 1.25;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 1px;
 }
 
-/* Banner de Dominio de Salud */
-.domain-alert-banner {
-  margin-top: 20px;
-  padding: 12px 14px;
-  background: var(--erp-bg-body);
-  border: 1px solid var(--erp-border);
-  border-left: 4px solid var(--erp-primary);
-  border-radius: var(--erp-radius-sm);
-  font-size: 12px;
-  color: var(--erp-text-muted);
-  line-height: 1.5;
+/* ================= ADAPTABILIDAD RESPONSIVA ================= */
+@media (max-width: 1040px) {
+  .login-stage {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .login-profiles-sidebar {
+    position: static;
+    transform: none;
+    width: 275px;
+  }
+
+  .login-form-panel {
+    width: 350px;
+  }
 }
 
-.domain-alert-banner strong {
-  color: var(--erp-text-main);
+@media (max-width: 680px) {
+  .login-page {
+    height: 100vh;
+    overflow-y: auto;
+    padding: 12px 8px;
+    align-items: flex-start;
+  }
+
+  .login-stage {
+    flex-direction: column;
+    width: 100%;
+    gap: 14px;
+    padding: 12px 0;
+  }
+
+  .login-profiles-sidebar {
+    order: 2;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .login-form-panel {
+    order: 1;
+    width: 100%;
+    max-width: 360px;
+  }
 }

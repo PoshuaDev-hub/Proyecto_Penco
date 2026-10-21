@@ -48,73 +48,68 @@ const ROLES_INSTITUCIONALES = [
     nombre: 'Carolina',
     nombreCompleto: 'Carolina Ruiz Parra',
     cargo: 'Jefa de Gestión y Desarrollo de las Personas',
-    cargoCorto: 'Jefa de Gestión RRHH',
+    cargoCorto: 'Jefa RRHH',
     username: 'carolina.ruiz',
     passwordDefault: 'penco2026',
     initials: 'CR',
     color: '#0284c7',
-    desc: 'Dirección de concursos, validación de perfiles y tramitación de resoluciones de contratación.',
+    desc: 'Validación de perfiles y resoluciones Ley 18.834',
   },
   {
     id: 'mariajose',
     nombre: 'María José',
     nombreCompleto: 'María José Duarte',
     cargo: 'Analista de Procesos de Selección',
-    cargoCorto: 'Analista de Selección',
-    username: 'mariajose.duarte',
+    cargoCorto: 'Analista',
+    username: 'maria.jose',
     passwordDefault: 'penco2026',
     initials: 'MD',
     color: '#7c3aed',
-    desc: 'Ejecutora directa del proceso concursal: recepción de expedientes, coordinación de comité y cierre administrativo.',
+    desc: 'Recepción y revisión de expedientes digitales',
   },
   {
     id: 'psicologo',
-    nombre: 'Psicólogo/a',
-    nombreCompleto: 'Psicólogo/a Laboral RRHH',
-    cargo: 'Especialista en Selección por Competencias',
-    cargoCorto: 'Especialista Selección',
-    username: 'psicologia.rrhh',
-    passwordDefault: 'penco2026',
+    nombre: 'Psicóloga Laboral',
+    nombreCompleto: 'Psicóloga Laboral RRHH',
+    cargo: 'Especialista en Evaluación por Competencias',
+    cargoCorto: 'Psicóloga',
+    username: 'psicologa',
+    passwordDefault: 'psico123',
     initials: 'PL',
-    color: '#0369a1',
-    desc: 'Diseño del banco de preguntas adaptativas, rúbricas de incidentes críticos y entrevistas.',
+    color: '#0d9488',
+    desc: 'Banco adaptativo y rúbricas por competencias',
   },
   {
     id: 'comision',
-    nombre: 'Comisión',
-    nombreCompleto: 'Comisión de Selección / Jefatura UCI',
+    nombre: 'Comisión Evaluadora',
+    nombreCompleto: 'Comisión / Jefatura UCI',
     cargo: 'Comité Técnico y Evaluador Clínico',
-    cargoCorto: 'Comité Técnico',
-    username: 'comision.seleccion',
-    passwordDefault: 'penco2026',
+    cargoCorto: 'Comité UCI',
+    username: 'comite1',
+    passwordDefault: 'comite123',
     initials: 'CE',
     color: '#16a34a',
-    desc: 'Revisión colegiada de antecedentes curriculares y entrevistas de especialidad médica.',
+    desc: 'Evaluación técnica curricular y actas',
   },
   {
     id: 'admin',
-    nombre: 'Administrador',
+    nombre: 'Administrador TI',
     nombreCompleto: 'Administrador General TI',
     cargo: 'Soporte y Auditoría Institucional',
     cargoCorto: 'Soporte TI',
     username: 'admin',
     passwordDefault: 'admin123',
     initials: 'TI',
-    color: '#64748b',
-    desc: 'Gestión de infraestructura, accesos por token y supervisión de la pista de auditoría inmutable.',
+    color: '#475569',
+    desc: 'Soporte de accesos y pista de auditoría',
   },
 ];
 
+
 export default function App() {
-  // Estado de usuario y token de sesión
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('hospital_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  // Estado de usuario y token de sesión (inicia siempre en Login para presentación profesional)
+  const [currentUser, setCurrentUser] = useState(null);
+
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -124,6 +119,14 @@ export default function App() {
 
   // Pantalla de carga post-login
   const [showSplash, setShowSplash] = useState(false);
+  const [splashLoopMode, setSplashLoopMode] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.has('splash') || window.location.hash === '#splash';
+    } catch {
+      return false;
+    }
+  });
   const [splashProgress, setSplashProgress] = useState(0);
   const [splashStatus, setSplashStatus] = useState('Iniciando sesión segura...');
   const [splashModules, setSplashModules] = useState([]);
@@ -344,6 +347,68 @@ export default function App() {
     setSplashExiting(false);
     if (onComplete) onComplete();
   };
+
+  // Escuchar cambios de URL en vivo para activar/desactivar modo bucle (?splash o #splash)
+  useEffect(() => {
+    const handleUrlChange = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        setSplashLoopMode(params.has('splash') || window.location.hash === '#splash');
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
+  }, []);
+
+  // Animación en bucle continuo de la pantalla de carga cuando splashLoopMode está activo
+  useEffect(() => {
+    if (!splashLoopMode) return;
+
+    let isMounted = true;
+    const runContinuousLoop = async () => {
+      const steps = [
+        { progress: 20, status: 'Autenticando credenciales y validando Token DRF...', module: 'API DRF' },
+        { progress: 40, status: 'Cargando catálogo maestro y perfiles Ley 18.834...', module: 'Selección' },
+        { progress: 65, status: 'Sincronizando 9 etapas oficiales y expedientes...', module: 'Postulantes' },
+        { progress: 85, status: 'Inicializando motor de IA adaptativo con guardrails éticos...', module: 'Banco IA' },
+        { progress: 100, status: 'Pista de auditoría inmutable activa. Conexión establecida.', module: 'Auditoría' },
+      ];
+
+      while (isMounted) {
+        setSplashExiting(false);
+        setSplashProgress(0);
+        setSplashModules([]);
+        setSplashStatus('Iniciando sesión segura...');
+        await new Promise((r) => setTimeout(r, 600));
+
+        for (const step of steps) {
+          if (!isMounted) break;
+          await new Promise((r) => setTimeout(r, 650));
+          if (!isMounted) break;
+          setSplashProgress(step.progress);
+          setSplashStatus(step.status);
+          setSplashModules((prev) => [...prev, step.module]);
+        }
+
+        if (!isMounted) break;
+        await new Promise((r) => setTimeout(r, 1600));
+        if (!isMounted) break;
+        setSplashExiting(true);
+        await new Promise((r) => setTimeout(r, 550));
+      }
+    };
+
+    runContinuousLoop();
+    return () => {
+      isMounted = false;
+    };
+  }, [splashLoopMode]);
 
   // Manejador de Login con Token de Seguridad + Pantalla de Carga
   const handleLoginSubmit = async (e) => {
@@ -917,169 +982,204 @@ export default function App() {
     return matchConcurso && matchEstado && matchBusqueda;
   });
 
-  // ================= RENDER: PANTALLA DE CARGA POST-LOGIN =================
-  if (showSplash) {
+  // ================= RENDER: PANTALLA DE CARGA (POST-LOGIN O MODO DEMO EN BUCLE) =================
+  if (showSplash || splashLoopMode) {
     return (
       <div className={`splash-screen${splashExiting ? ' exiting' : ''}`}>
+        {splashLoopMode && (
+          <div className="splash-loop-bar">
+            <span className="splash-loop-tag">Modo Bucle Continuo</span>
+            <button
+              type="button"
+              className="splash-loop-exit-btn"
+              onClick={() => {
+                setSplashLoopMode(false);
+                window.history.replaceState({}, '', window.location.pathname);
+              }}
+              title="Volver a la aplicación"
+            >
+              ✕ Salir de la demo
+            </button>
+          </div>
+        )}
         <div className="splash-glow" />
         <div className="splash-content">
           <div className="splash-logo-box">
             <IconHospital size={44} />
           </div>
-          <div className="splash-institution">Servicio de Salud Talcahuano &bull; Hospital Penco Lirquén</div>
-          <div className="splash-title">Hospital Penco <span>ERP</span></div>
-          <div className="splash-subtitle">Subdirección de Gestión y Desarrollo de las Personas</div>
-
+          <div className="splash-institution">Servicio de Selección en Salud</div>
+          <div className="splash-title">Hospital Penco</div>
           <div className="splash-progress-wrap">
             <div className="splash-progress-track">
               <div className="splash-progress-bar" style={{ width: `${splashProgress}%` }} />
             </div>
-            <div className="splash-status-text">{splashStatus}</div>
-          </div>
-
-          <div className="splash-modules">
-            {['Selección', 'Postulantes', 'Banco IA', 'Auditoría', 'API DRF'].map((mod) => (
-              <div key={mod} className={`splash-module-chip ${splashModules.includes(mod) ? 'loaded' : ''}`}>
-                <span className="splash-module-dot" />
-                {mod}
-              </div>
-            ))}
           </div>
         </div>
-        <div className="splash-footer-text">Sistema ERP de Selección &bull; Django 5 + React 18 &bull; Ley 18.834 &bull; 2026</div>
+        <div className="splash-footer-text">Sistema de Selección &bull; Ley 18.834</div>
       </div>
     );
   }
 
   // ================= RENDER: LOGIN FORM =================
   if (!currentUser) {
+    const selectedProfile = ROLES_INSTITUCIONALES.find((r) => r.id === selectedProfileId) || ROLES_INSTITUCIONALES[0];
+
     return (
       <div className={dark ? 'app dark' : 'app'}>
         <div className="login-page">
-          <div className="login-box">
-            {/* Encabezado Institucional Servicio de Salud Talcahuano */}
-            <div className="login-logo">
-              <div className="login-institution-badge">
-                <IconHospital size={16} />
-                <span>SERVICIO DE SALUD TALCAHUANO &bull; HOSPITAL PENCO LIRQUÉN</span>
+          <div className="login-stage">
+            {/* ================= PANEL IZQUIERDO: PERFILES DE PRUEBA COMPACTOS ================= */}
+            <aside className="login-profiles-sidebar">
+              <div className="login-profiles-header">
+                <div className="login-profiles-badge">
+                  <IconShield size={11} />
+                  <span>DEMO INSTITUCIONAL</span>
+                </div>
+                <h3 className="login-profiles-title">Perfiles de Prueba</h3>
+                <p className="login-profiles-subtitle">
+                  Haz clic para autocompletar credenciales de acceso:
+                </p>
               </div>
-              <h1>
-                <b>Hospital Penco</b> <span>ERP</span>
-              </h1>
-              <p>Subdirección de Gestión y Desarrollo de las Personas &bull; Ley 18.834</p>
-            </div>
 
-            <div className="card-login">
-              <div className="login-card-body">
-                {loginError && (
-                  <div
-                    style={{
-                      background: '#fee2e2',
-                      border: '1px solid #fca5a5',
-                      color: '#991b1b',
-                      padding: '10px 14px',
-                      borderRadius: 6,
-                      marginBottom: 16,
-                      fontSize: 13,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <IconAlertTriangle size={18} />
-                    <span>{loginError}</span>
-                  </div>
-                )}
+              <div className="login-profiles-list">
+                {ROLES_INSTITUCIONALES.map((rol) => {
+                  const isSelected = selectedProfileId === rol.id;
+                  return (
+                    <div
+                      key={rol.id}
+                      className={`login-profile-card ${isSelected ? 'active' : ''}`}
+                      onClick={() => handleSelectProfileCard(rol)}
+                      title={`Seleccionar perfil de ${rol.nombreCompleto} (${rol.cargoCorto})`}
+                    >
+                      <div
+                        className="login-profile-avatar"
+                        style={{ background: rol.color }}
+                      >
+                        {rol.initials}
+                      </div>
 
-                <form onSubmit={handleLoginSubmit}>
-                  {/* Input 1: Usuario con icono a la derecha */}
-                  <div className="erp-input-box">
-                    <input
-                      type="text"
-                      className="erp-input-field"
-                      placeholder="Usuario institucional"
-                      value={loginUsername}
-                      onChange={(e) => setLoginUsername(e.target.value)}
-                      required
-                    />
-                    <div className="erp-input-icon">
-                      <IconUser size={18} />
-                    </div>
-                  </div>
-
-                  {/* Input 2: Contraseña con icono a la derecha */}
-                  <div className="erp-input-box">
-                    <input
-                      type="password"
-                      className="erp-input-field"
-                      placeholder="Contraseña"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
-                    <div className="erp-input-icon">
-                      <IconLock size={18} />
-                    </div>
-                  </div>
-
-                  {/* Botón azul exacto al de la foto */}
-                  <button type="submit" className="btn-login-submit">
-                    <IconCheck size={18} />
-                    <span>Ingresar al Sistema ERP</span>
-                  </button>
-                </form>
-
-                {/* Sección de Perfiles Institucionales de Prueba (Idéntico a la foto) */}
-                <div className="login-quick-section">
-                  <div className="login-quick-title">
-                    <IconShield size={16} />
-                    <span>PERFILES INSTITUCIONALES DE PRUEBA (Pag. 2 y 9 del PDF):</span>
-                  </div>
-
-                  <div className="role-cards-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                    {ROLES_INSTITUCIONALES.map((rol) => {
-                      const isSelected = selectedProfileId === rol.id;
-                      return (
-                        <div
-                          key={rol.id}
-                          className={`role-card-btn ${isSelected ? 'active' : ''}`}
-                          onClick={() => handleSelectProfileCard(rol)}
-                        >
-                          <div
-                            className="role-avatar-circle"
-                            style={{ background: isSelected ? rol.color : undefined }}
-                          >
-                            {rol.initials}
-                          </div>
-                          <div className="role-card-info">
-                            <span className="role-card-name">{rol.nombre}</span>
-                            <span className="role-card-title">{rol.cargoCorto}</span>
-                          </div>
-                          {isSelected && (
-                            <span style={{
-                              position: 'absolute', top: 6, right: 8,
-                              width: 8, height: 8, borderRadius: '50%',
-                              background: rol.color, boxShadow: `0 0 6px ${rol.color}`
-                            }} />
-                          )}
+                      <div className="login-profile-body">
+                        <div className="login-profile-name-row">
+                          <span className="login-profile-name">{rol.nombreCompleto}</span>
+                          <span className="login-profile-cargo-badge">{rol.cargoCorto}</span>
                         </div>
-                      );
-                    })}
+                        <div className="login-profile-desc">{rol.desc}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </aside>
+
+            {/* ================= PANEL CENTRAL: FORMULARIO DE ACCESO ================= */}
+            <main className="login-form-panel">
+              <div className="login-logo">
+                <div className="login-institution-badge">
+                  <IconHospital size={14} />
+                  <span>SERVICIO DE SELECCIÓN EN SALUD</span>
+                </div>
+                <h1>
+                  <b>Hospital Penco </b>
+                </h1>
+                <p>Gestión y Desarrollo de las Personas &bull; Ley 18.834</p>
+              </div>
+
+              <div className="card-login">
+                <div className="login-card-body">
+                  {/* Banner de perfil preparado */}
+                  {selectedProfile && (
+                    <div className="login-active-hint">
+                      <div
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 4,
+                          background: selectedProfile.color,
+                          color: '#fff',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {selectedProfile.initials}
+                      </div>
+                      <div className="login-active-hint-text">
+                        Perfil activo: <strong>{selectedProfile.nombreCompleto}</strong> ({ selectedProfile.cargoCorto})
+                      </div>
+                    </div>
+                  )}
+
+                  {loginError && (
+                    <div className="login-error-alert">
+                      <IconAlertTriangle size={15} />
+                      <span>{loginError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLoginSubmit}>
+                    {/* Input 1: Usuario */}
+                    <div className="erp-input-box">
+                      <input
+                        type="text"
+                        className="erp-input-field"
+                        placeholder="Usuario institucional"
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
+                        required
+                      />
+                      <div className="erp-input-icon">
+                        <IconUser size={16} />
+                      </div>
+                    </div>
+
+                    {/* Input 2: Contraseña */}
+                    <div className="erp-input-box">
+                      <input
+                        type="password"
+                        className="erp-input-field"
+                        placeholder="Contraseña"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                      />
+                      <div className="erp-input-icon">
+                        <IconLock size={16} />
+                      </div>
+                    </div>
+
+                    {/* Botón azul */}
+                    <button type="submit" className="btn-login-submit">
+                      <IconCheck size={16} />
+                      <span>Ingresar al Sistema</span>
+                    </button>
+                  </form>
+
+                  <div className="login-security-notice">
+                    <IconShield size={13} style={{ color: 'var(--erp-primary)', flexShrink: 0 }} />
+                    <span>Autenticación con Token</span>
                   </div>
                 </div>
-
-                {/* Aclaración formal del dominio (Sin Pacientes Clínicos) */}
-                <div className="domain-alert-banner">
-                  <strong>Aviso de Dominio Hospitalario:</strong> Uso interno exclusivo para la{' '}
-                  <strong>Subdirección de Gestión y Desarrollo de las Personas</strong>. Todos los usuarios son{' '}
-                  <strong>profesionales de salud o evaluadores</strong>; no administra pacientes ni fichas clínicas.
-                </div>
               </div>
-            </div>
 
-            <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12, color: 'var(--erp-text-muted)' }}>
-              Hospital Penco Lirquén &bull; Sistema ERP de Selección de Personas &bull; 2026
-            </div>
+              <div className="login-footer">
+                <span>Hospital Penco Lirquén &bull; En desarrollo</span>
+                <span style={{ margin: '0 8px', opacity: 0.35 }}>&bull;</span>
+                <button
+                  type="button"
+                  className="link-splash-loop"
+                  onClick={() => {
+                    setSplashLoopMode(true);
+                    window.history.pushState({}, '', '?splash');
+                  }}
+                  title="Ver la pantalla de carga institucional en animación continua"
+                >
+                  Ver pantalla de carga en bucle
+                </button>
+              </div>
+            </main>
           </div>
         </div>
       </div>
