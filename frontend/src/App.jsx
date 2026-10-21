@@ -46,67 +46,49 @@ const ETAPAS_PROCESO = [
   { id: 'cerrado',               nombre: '10. Cierre Formal',                 desc: 'Archivo del expediente y cierre del proceso' },
 ];
 
-// Perfiles institucionales reales nombrados en el DESAFIO_PROYECTO_ABP.pdf (Pag. 2 y 9)
+// 3 Perfiles institucionales normados Ley 18.834 (Mesa de Entrada, Jefatura, Admin TI)
 const ROLES_INSTITUCIONALES = [
   {
-    id: 'carolina',
-    nombre: 'Carolina',
+    id: 'mesa',
+    roleCode: 'mesa',
+    nombre: 'Mesa de Entrada',
+    nombreCompleto: 'María José Duarte',
+    cargo: 'Mesa de Entradas y Admisión Digital',
+    cargoCorto: 'Mesa de Entrada',
+    username: 'mesa.entrada',
+    passwordDefault: 'penco2026',
+    initials: 'ME',
+    color: '#7c3aed',
+    desc: 'Mesa de Entrada • Recepción digital, generación de tokens con RUT para postulantes y verificación documental SIS.',
+    allowedTabs: ['dashboard', 'filtro'],
+  },
+  {
+    id: 'jefatura',
+    roleCode: 'jefatura',
+    nombre: 'Jefatura RRHH',
     nombreCompleto: 'Carolina Ruiz Parra',
     cargo: 'Jefa de Gestión y Desarrollo de las Personas',
-    cargoCorto: 'Jefa RRHH',
-    username: 'carolina.ruiz',
+    cargoCorto: 'Jefatura RRHH',
+    username: 'jefatura',
     passwordDefault: 'penco2026',
-    initials: 'CR',
+    initials: 'JF',
     color: '#0284c7',
-    desc: 'Jefatura RRHH • Apertura de concursos, validación y avance de etapas normadas Ley 18.834',
-  },
-  {
-    id: 'mariajose',
-    nombre: 'María José',
-    nombreCompleto: 'María José Duarte',
-    cargo: 'Analista de Procesos de Selección',
-    cargoCorto: 'Mesa de Entradas',
-    username: 'maria.jose',
-    passwordDefault: 'penco2026',
-    initials: 'MD',
-    color: '#7c3aed',
-    desc: 'Mesa de Entradas • Ingreso de postulantes, carga de certificados y modificación de expedientes',
-  },
-  {
-    id: 'psicologo',
-    nombre: 'Psicóloga Laboral',
-    nombreCompleto: 'Psicóloga Laboral RRHH',
-    cargo: 'Especialista en Evaluación por Competencias',
-    cargoCorto: 'Psicóloga',
-    username: 'psicologa',
-    passwordDefault: 'psico123',
-    initials: 'PL',
-    color: '#0d9488',
-    desc: 'Psicóloga Laboral • Banco adaptativo, incidentes críticos y rúbricas por competencias',
-  },
-  {
-    id: 'comision',
-    nombre: 'Comisión Evaluadora',
-    nombreCompleto: 'Comisión / Jefatura UCI',
-    cargo: 'Comité Técnico y Evaluador Clínico',
-    cargoCorto: 'Comité Técnico',
-    username: 'comite1',
-    passwordDefault: 'comite123',
-    initials: 'CE',
-    color: '#16a34a',
-    desc: 'Comisión Evaluadora • Calificación técnica, acuerdos colegiados y avance de etapas',
+    desc: 'Jefatura RRHH • Apertura de concursos, avance de etapas normadas, resoluciones colegiadas y Asistente IA.',
+    allowedTabs: ['dashboard', 'perfiles', 'procesos', 'filtro', 'pautas', 'ia'],
   },
   {
     id: 'admin',
+    roleCode: 'admin',
     nombre: 'Administrador TI',
     nombreCompleto: 'Administrador General TI',
-    cargo: 'Soporte y Auditoría Institucional',
+    cargo: 'Soporte, Auditoría y Seguridad Institucional',
     cargoCorto: 'Admin TI & Datos',
     username: 'admin',
     passwordDefault: 'admin123',
     initials: 'TI',
-    color: '#475569',
-    desc: 'Admin TI & Datos • Control inmutable de datos, auditoría de usuarios y configuración de IA',
+    color: '#334155',
+    desc: 'Admin TI & Datos • Control inmutable de datos, auditoría global y configuración técnica de guardrails de IA.',
+    allowedTabs: ['dashboard', 'perfiles', 'procesos', 'filtro', 'pautas', 'ia', 'auditoria'],
   },
 ];
 
@@ -121,6 +103,20 @@ export default function App() {
   const [dark, setDark] = useState(false);
   const [apiOnline, setApiOnline] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Control de Acceso Basado en Roles (RBAC) para 3 Perfiles Demo
+  const userAllowedTabs = currentUser?.allowedTabs || (
+    currentUser?.roleCode === 'mesa' ? ['dashboard', 'filtro'] :
+    currentUser?.roleCode === 'jefatura' ? ['dashboard', 'perfiles', 'procesos', 'filtro', 'pautas', 'ia'] :
+    ['dashboard', 'perfiles', 'procesos', 'filtro', 'pautas', 'ia', 'auditoria']
+  );
+
+  // Redirigir automáticamente si la pestaña activa excede los permisos del rol
+  useEffect(() => {
+    if (currentUser && !userAllowedTabs.includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [currentUser, activeTab, userAllowedTabs]);
 
   // Pantalla de carga post-login
   const [showSplash, setShowSplash] = useState(false);
@@ -139,6 +135,13 @@ export default function App() {
 
   // Asistente IA - Chatbot, Gobernanza y Pruebas
   const [iaActiveSubtab, setIaActiveSubtab] = useState('chatbot');
+
+  // Si el usuario no es Admin TI, la subpestaña 'config' (guardrails técnicos) se redirige a chatbot
+  useEffect(() => {
+    if (currentUser && currentUser.roleCode !== 'admin' && iaActiveSubtab === 'config') {
+      setIaActiveSubtab('chatbot');
+    }
+  }, [currentUser, iaActiveSubtab]);
   const [adversarialInput, setAdversarialInput] = useState('');
   const [adversarialResult, setAdversarialResult] = useState(null);
   const [adversarialHistory, setAdversarialHistory] = useState([]);
@@ -202,11 +205,19 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
   const [showModalExpediente, setShowModalExpediente] = useState(false);
   const [expedientePostulante, setExpedientePostulante] = useState(null);
 
-  // Portal Público de Postulación y Token Seguro
+  // Portal Público de Postulación con Doble Factor (Token Seguro + RUT)
   const [portalToken, setPortalToken] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       return params.get('token') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [portalRut, setPortalRut] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('rut') || '';
     } catch {
       return '';
     }
@@ -501,14 +512,20 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
       });
       const data = await res.json();
       if (res.ok && data.status === 'ok') {
+        const matchedDemo = ROLES_INSTITUCIONALES.find(
+          (r) => r.roleCode === data.user.roleCode || r.username === data.user.username
+        ) || ROLES_INSTITUCIONALES[2]; // Admin fallback
+
         userObj = {
           id: data.user.id,
           nombre: data.user.nombre,
           username: data.user.username,
           rol: data.user.rol,
+          roleCode: data.user.roleCode || matchedDemo.roleCode,
+          allowedTabs: matchedDemo.allowedTabs,
           email: data.user.email,
           token: data.token,
-          initials: data.user.nombre.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || 'TI',
+          initials: data.user.nombre.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() || matchedDemo.initials,
         };
       }
     } catch {
@@ -519,6 +536,9 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
     if (!userObj) {
       const demo = ROLES_INSTITUCIONALES.find(
         (r) => r.username.toLowerCase() === loginUsername.toLowerCase()
+      ) || (
+        loginUsername.toLowerCase() === 'carolina.ruiz' ? ROLES_INSTITUCIONALES[1] :
+        loginUsername.toLowerCase() === 'maria.jose' ? ROLES_INSTITUCIONALES[0] : null
       );
       if (demo) {
         userObj = {
@@ -526,6 +546,8 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
           nombre: demo.nombreCompleto,
           username: demo.username,
           rol: demo.cargo,
+          roleCode: demo.roleCode,
+          allowedTabs: demo.allowedTabs,
           email: `${demo.username}@hospitalpenco.cl`,
           token: 'token_' + demo.id + '_' + Date.now().toString(36),
           initials: demo.initials,
@@ -1174,9 +1196,10 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
     }
   };
 
-  const handleAbrirPortalParaPostulante = (token) => {
+  const handleAbrirPortalParaPostulante = (token, rut = '') => {
     if (!token) return;
     setPortalToken(token);
+    setPortalRut(rut);
     setMostrarPortalPublico(true);
   };
 
@@ -1329,18 +1352,21 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
     );
   }
 
-  // ================= RENDER: PORTAL PÚBLICO DEL POSTULANTE (TOKEN SEGURO) =================
+  // ================= RENDER: PORTAL PÚBLICO DEL POSTULANTE (TOKEN SEGURO + RUT) =================
   if (mostrarPortalPublico && portalToken) {
     return (
       <PortalPostulante
         token={portalToken}
+        initialRut={portalRut}
         dark={dark}
         setDark={setDark}
         onVolver={() => {
           setMostrarPortalPublico(false);
+          setPortalRut('');
           try {
             const url = new URL(window.location.href);
             url.searchParams.delete('token');
+            url.searchParams.delete('rut');
             window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
           } catch {}
         }}
@@ -1490,7 +1516,7 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                     <span>Autenticación con Token</span>
                   </div>
 
-                  {/* Acceso directo para postulantes externos con token */}
+                  {/* Acceso para postulantes con RUT y Token Seguro */}
                   <div style={{
                     marginTop: '20px',
                     paddingTop: '16px',
@@ -1500,42 +1526,71 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                       <IconKey size={14} style={{ color: 'var(--erp-primary)' }} />
                       <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--erp-text-main)' }}>
-                        ¿Eres Postulante a un Concurso?
+                        Portal de Postulantes & Seguimiento Concursal
                       </span>
                     </div>
                     <p style={{ fontSize: '11px', color: 'var(--erp-text-muted)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
-                      Ingresa tu token o enlace único para completar tu expediente o revisar el avance de tu postulación:
+                      Ingresa tu RUT y tu Código o Token para consultar el avance de tu postulación o completar tu expediente:
                     </p>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input
-                        type="text"
-                        className="form-control-erp"
-                        placeholder="Token o enlace (ej: 8a5d3f1a...)"
-                        style={{ fontSize: '12px', padding: '6px 10px' }}
-                        value={portalToken}
-                        onChange={(e) => {
-                          const val = e.target.value.trim();
-                          if (val.includes('token=')) {
-                            try {
-                              const parsed = new URL(val).searchParams.get('token') || val.split('token=')[1];
-                              setPortalToken(parsed);
-                              return;
-                            } catch {
-                              const parsed = val.split('token=')[1]?.split('&')[0];
-                              if (parsed) {
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div className="erp-input-box" style={{ margin: 0, height: 38 }}>
+                        <input
+                          type="text"
+                          className="erp-input-field"
+                          placeholder="RUT del Postulante (ej: 12.345.678-9)"
+                          style={{ fontSize: '12px', padding: '6px 12px 6px 36px' }}
+                          value={portalRut}
+                          onChange={(e) => setPortalRut(e.target.value)}
+                        />
+                        <div className="erp-input-icon">
+                          <IconUser size={15} />
+                        </div>
+                      </div>
+
+                      <div className="erp-input-box" style={{ margin: 0, height: 38 }}>
+                        <input
+                          type="text"
+                          className="erp-input-field"
+                          placeholder="Código / Token o enlace de postulación"
+                          style={{ fontSize: '12px', padding: '6px 12px 6px 36px' }}
+                          value={portalToken}
+                          onChange={(e) => {
+                            const val = e.target.value.trim();
+                            if (val.includes('token=')) {
+                              try {
+                                const urlObj = new URL(val);
+                                const parsed = urlObj.searchParams.get('token') || val.split('token=')[1];
                                 setPortalToken(parsed);
+                                if (urlObj.searchParams.get('rut')) {
+                                  setPortalRut(urlObj.searchParams.get('rut'));
+                                }
                                 return;
+                              } catch {
+                                const parsed = val.split('token=')[1]?.split('&')[0];
+                                if (parsed) {
+                                  setPortalToken(parsed);
+                                  return;
+                                }
                               }
                             }
-                          }
-                          setPortalToken(val);
-                        }}
-                      />
+                            setPortalToken(val);
+                          }}
+                        />
+                        <div className="erp-input-icon">
+                          <IconKey size={15} />
+                        </div>
+                      </div>
+
                       <button
                         type="button"
                         className="btn-erp btn-erp-primary"
-                        style={{ whiteSpace: 'nowrap', fontSize: '12px', padding: '6px 14px' }}
+                        style={{ width: '100%', justifyContent: 'center', fontSize: '12px', padding: '8px 14px' }}
                         onClick={() => {
+                          if (!portalRut.trim()) {
+                            addToast('warning', 'RUT Requerido', 'Por favor ingresa tu RUT para verificar tu postulación.');
+                            return;
+                          }
                           if (!portalToken.trim()) {
                             addToast('warning', 'Token Requerido', 'Ingresa tu token o enlace único para continuar.');
                             return;
@@ -1543,7 +1598,8 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                           setMostrarPortalPublico(true);
                         }}
                       >
-                        Ingresar
+                        <IconCheck size={14} />
+                        <span>Acceder a mi Postulación</span>
                       </button>
                     </div>
                   </div>
@@ -1601,68 +1657,84 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
           <nav className="sidebar-nav">
             <div className="nav-header">Módulos de Gestión</div>
 
-            <button
-              className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <div className="sidebar-icon"><IconBriefcase size={18} /></div>
-              <span className="nav-text">Panel General</span>
-            </button>
+            {userAllowedTabs.includes('dashboard') && (
+              <button
+                className={`sidebar-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <div className="sidebar-icon"><IconBriefcase size={18} /></div>
+                <span className="nav-text">Panel General</span>
+              </button>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'perfiles' ? 'active' : ''}`}
-              onClick={() => setActiveTab('perfiles')}
-            >
-              <div className="sidebar-icon"><IconFileText size={18} /></div>
-              <span className="nav-text">Perfiles de Cargo</span>
-              <span className="badge-counter">{perfilesCargo.length}</span>
-            </button>
+            {userAllowedTabs.includes('perfiles') && (
+              <button
+                className={`sidebar-link ${activeTab === 'perfiles' ? 'active' : ''}`}
+                onClick={() => setActiveTab('perfiles')}
+              >
+                <div className="sidebar-icon"><IconFileText size={18} /></div>
+                <span className="nav-text">Perfiles de Cargo</span>
+                <span className="badge-counter">{perfilesCargo.length}</span>
+              </button>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'procesos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('procesos')}
-            >
-              <div className="sidebar-icon"><IconBriefcase size={18} /></div>
-              <span className="nav-text">Concursos Ley 18.834</span>
-              <span className="badge-counter">{procesos.length}</span>
-            </button>
+            {userAllowedTabs.includes('procesos') && (
+              <button
+                className={`sidebar-link ${activeTab === 'procesos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('procesos')}
+              >
+                <div className="sidebar-icon"><IconBriefcase size={18} /></div>
+                <span className="nav-text">Concursos Ley 18.834</span>
+                <span className="badge-counter">{procesos.length}</span>
+              </button>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'filtro' ? 'active' : ''}`}
-              onClick={() => setActiveTab('filtro')}
-            >
-              <div className="sidebar-icon"><IconUsers size={18} /></div>
-              <span className="nav-text">Mesa de Postulantes</span>
-              <span className="badge-counter">{postulaciones.length}</span>
-            </button>
+            {userAllowedTabs.includes('filtro') && (
+              <button
+                className={`sidebar-link ${activeTab === 'filtro' ? 'active' : ''}`}
+                onClick={() => setActiveTab('filtro')}
+              >
+                <div className="sidebar-icon"><IconUsers size={18} /></div>
+                <span className="nav-text">Mesa de Postulantes</span>
+                <span className="badge-counter">{postulaciones.length}</span>
+              </button>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'pautas' ? 'active' : ''}`}
-              onClick={() => setActiveTab('pautas')}
-            >
-              <div className="sidebar-icon"><IconGitBranch size={18} /></div>
-              <span className="nav-text">Banco Adaptativo</span>
-              <span className="badge-counter">{preguntas.length}</span>
-            </button>
+            {userAllowedTabs.includes('pautas') && (
+              <button
+                className={`sidebar-link ${activeTab === 'pautas' ? 'active' : ''}`}
+                onClick={() => setActiveTab('pautas')}
+              >
+                <div className="sidebar-icon"><IconGitBranch size={18} /></div>
+                <span className="nav-text">Banco Adaptativo</span>
+                <span className="badge-counter">{preguntas.length}</span>
+              </button>
+            )}
 
-            <div className="nav-header">Inteligencia & Auditoría</div>
+            {(userAllowedTabs.includes('ia') || userAllowedTabs.includes('auditoria')) && (
+              <div className="nav-header">Inteligencia & Auditoría</div>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'ia' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ia')}
-            >
-              <div className="sidebar-icon"><IconSparkles size={18} /></div>
-              <span className="nav-text">Asistente IA (RAG)</span>
-            </button>
+            {userAllowedTabs.includes('ia') && (
+              <button
+                className={`sidebar-link ${activeTab === 'ia' ? 'active' : ''}`}
+                onClick={() => setActiveTab('ia')}
+              >
+                <div className="sidebar-icon"><IconSparkles size={18} /></div>
+                <span className="nav-text">Asistente IA (RAG)</span>
+              </button>
+            )}
 
-            <button
-              className={`sidebar-link ${activeTab === 'auditoria' ? 'active' : ''}`}
-              onClick={() => setActiveTab('auditoria')}
-            >
-              <div className="sidebar-icon"><IconShield size={18} /></div>
-              <span className="nav-text">Pista de Auditoría</span>
-              <span className="badge-counter">{auditorias.length}</span>
-            </button>
+            {userAllowedTabs.includes('auditoria') && (
+              <button
+                className={`sidebar-link ${activeTab === 'auditoria' ? 'active' : ''}`}
+                onClick={() => setActiveTab('auditoria')}
+              >
+                <div className="sidebar-icon"><IconShield size={18} /></div>
+                <span className="nav-text">Pista de Auditoría</span>
+                <span className="badge-counter">{auditorias.length}</span>
+              </button>
+            )}
           </nav>
 
           <div className="sidebar-footer">
@@ -1727,16 +1799,18 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                 <span>Cargar Subsistemas</span>
               </button>
 
-              <a
-                href="http://127.0.0.1:8000/admin/"
-                target="_blank"
-                rel="noreferrer"
-                className="btn-erp btn-erp-sm btn-erp-secondary"
-                title="Consola Django Admin"
-              >
-                <IconShield size={14} />
-                <span>Admin Django</span>
-              </a>
+              {currentUser?.roleCode === 'admin' && (
+                <a
+                  href="http://127.0.0.1:8000/admin/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-erp btn-erp-sm btn-erp-secondary"
+                  title="Consola Django Admin (Solo Administrador TI)"
+                >
+                  <IconShield size={14} />
+                  <span>Admin Django</span>
+                </a>
+              )}
 
               <button
                 className="btn-toggle-sidebar"
@@ -1843,8 +1917,8 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                     <div className="icon">
                       <IconBriefcase size={50} />
                     </div>
-                    <div className="small-box-footer" onClick={() => setActiveTab('procesos')} style={{ cursor: 'pointer' }}>
-                      <span>Gestionar Procesos</span>
+                    <div className="small-box-footer" onClick={() => userAllowedTabs.includes('procesos') ? setActiveTab('procesos') : setActiveTab('filtro')} style={{ cursor: 'pointer' }}>
+                      <span>{userAllowedTabs.includes('procesos') ? 'Gestionar Procesos' : 'Ver Postulaciones'}</span>
                       <IconChevronRight size={14} />
                     </div>
                   </div>
@@ -1903,10 +1977,12 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                         <span className="badge-erp badge-erp-primary">
                           {selectedProceso.area_usuaria || 'Área Clínica'}
                         </span>
-                        <button className="btn-erp btn-erp-sm btn-erp-primary" onClick={handleAvanzarEtapaProceso}>
-                          <span>Avanzar Etapa</span>
-                          <IconChevronRight size={14} />
-                        </button>
+                        {currentUser?.roleCode !== 'mesa' && (
+                          <button className="btn-erp btn-erp-sm btn-erp-primary" onClick={handleAvanzarEtapaProceso}>
+                            <span>Avanzar Etapa</span>
+                            <IconChevronRight size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="card-body-erp">
@@ -2045,13 +2121,16 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                             <span>Avanzar a Siguiente Etapa</span>
                             <IconChevronRight size={15} />
                           </button>
-                          <button
-                            className="btn-erp btn-erp-outline-danger"
-                            onClick={() => handleEliminarProceso(selectedProceso.id)}
-                          >
-                            <IconTrash size={15} />
-                            <span>Archivar</span>
-                          </button>
+                          {currentUser?.roleCode === 'admin' && (
+                            <button
+                              className="btn-erp btn-erp-outline-danger"
+                              onClick={() => handleEliminarProceso(selectedProceso.id)}
+                              title="Archivar concurso (Solo Admin TI)"
+                            >
+                              <IconTrash size={15} />
+                              <span>Archivar</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -2231,14 +2310,16 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                               <IconFileText size={14} />
                               <span>Ver Expediente</span>
                             </button>
-                            <button
-                              type="button"
-                              className="btn-erp btn-erp-sm btn-erp-outline-danger"
-                              onClick={() => handleEliminarPostulacion(selectedPostulante.id)}
-                              title="Retirar postulación"
-                            >
-                              <IconTrash size={14} />
-                            </button>
+                            {currentUser?.roleCode === 'admin' && (
+                              <button
+                                type="button"
+                                className="btn-erp btn-erp-sm btn-erp-outline-danger"
+                                onClick={() => handleEliminarPostulacion(selectedPostulante.id)}
+                                title="Retirar postulación (Solo Admin TI)"
+                              >
+                                <IconTrash size={14} />
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -2314,7 +2395,7 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                                 type="button"
                                 className="btn-erp btn-erp-primary btn-erp-sm"
                                 style={{ whiteSpace: 'nowrap' }}
-                                onClick={() => handleAbrirPortalParaPostulante(selectedPostulante.token_acceso)}
+                                onClick={() => handleAbrirPortalParaPostulante(selectedPostulante.token_acceso, selectedPostulante.postulante_rut)}
                                 title="Abrir portal del postulante para auditar"
                                 disabled={!selectedPostulante.token_acceso}
                               >
@@ -2384,44 +2465,50 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                           <strong style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             Resolución Colegiada de Comisión:
                           </strong>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                            <button
-                              className="btn-erp btn-erp-success"
-                              onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'preseleccionada')}
-                            >
-                              <IconCheck size={15} />
-                              <span>Preseleccionar</span>
-                            </button>
-                            <button
-                              className="btn-erp btn-erp-warning"
-                              onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'en_revision')}
-                            >
-                              <IconClock size={15} />
-                              <span>Dejar en Revisión</span>
-                            </button>
-                            <button
-                              className="btn-erp btn-erp-danger"
-                              onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'descartada')}
-                            >
-                              <IconX size={15} />
-                              <span>Descartar por Bases</span>
-                            </button>
-                            <button
-                              className="btn-erp btn-erp-primary"
-                              onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'aprobada')}
-                            >
-                              <IconCheckCircle size={15} />
-                              <span>Aprobar Selección</span>
-                            </button>
-                            <button
-                              className="btn-erp btn-erp-secondary"
-                              onClick={() => handleAbrirGestionarEstado(selectedPostulante)}
-                              title="Configurar etapa oficial, mensaje público y subsanación"
-                            >
-                              <IconSettings size={15} />
-                              <span>Gestión Avanzada</span>
-                            </button>
-                          </div>
+                          {currentUser?.roleCode === 'mesa' ? (
+                            <div style={{ fontSize: '12px', color: 'var(--erp-text-muted)', fontStyle: 'italic', marginTop: '6px' }}>
+                              * Resoluciones colegiadas reservadas para Jefatura de Selección y Comisión Evaluadora (Ley 18.834).
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                              <button
+                                className="btn-erp btn-erp-success"
+                                onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'preseleccionada')}
+                              >
+                                <IconCheck size={15} />
+                                <span>Preseleccionar</span>
+                              </button>
+                              <button
+                                className="btn-erp btn-erp-warning"
+                                onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'en_revision')}
+                              >
+                                <IconClock size={15} />
+                                <span>Dejar en Revisión</span>
+                              </button>
+                              <button
+                                className="btn-erp btn-erp-danger"
+                                onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'descartada')}
+                              >
+                                <IconX size={15} />
+                                <span>Descartar por Bases</span>
+                              </button>
+                              <button
+                                className="btn-erp btn-erp-primary"
+                                onClick={() => handleCambiarEstadoPostulacion(selectedPostulante.id, 'aprobada')}
+                              >
+                                <IconCheckCircle size={15} />
+                                <span>Aprobar Selección</span>
+                              </button>
+                              <button
+                                className="btn-erp btn-erp-secondary"
+                                onClick={() => handleAbrirGestionarEstado(selectedPostulante)}
+                                title="Configurar etapa oficial, mensaje público y subsanación"
+                              >
+                                <IconSettings size={15} />
+                                <span>Gestión Avanzada</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -2603,7 +2690,9 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                     { id: 'overview', label: 'Arquitectura RAG' },
                     { id: 'adversarial', label: 'Pruebas Adversariales' },
                     { id: 'history', label: `Historial Guardrails (${adversarialHistory.length})` },
-                    { id: 'config', label: '⚙️ Configuración Admin IA' },
+                    ...(currentUser?.roleCode === 'admin'
+                      ? [{ id: 'config', label: '⚙️ Configuración Admin IA' }]
+                      : []),
                   ].map((st) => (
                     <button
                       key={st.id}
@@ -4090,7 +4179,7 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                         className="btn-erp btn-erp-secondary btn-erp-sm"
                         onClick={() => {
                           setShowModalGenerarToken(false);
-                          handleAbrirPortalParaPostulante(tokenGeneradoResultado.token);
+                          handleAbrirPortalParaPostulante(tokenGeneradoResultado.token, tokenGeneradoResultado.rut);
                         }}
                       >
                         Abrir Portal Ahora

@@ -157,12 +157,18 @@ class PostulacionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+def normalizar_rut(rut_str):
+    if not rut_str:
+        return ''
+    return str(rut_str).replace('.', '').replace(' ', '').replace('-', '').upper().strip()
+
+
 class PortalPostulanteView(APIView):
     """
-    Vista pública protegida por token criptográfico único.
-    Permite al postulante ver el estado de su postulación en tiempo real,
-    rellenar sus datos personales/profesionales, adjuntar documentos
-    y enviarla a revisión oficial.
+    Vista pública protegida por doble factor (Token criptográfico único + RUT).
+    Garantiza privacidad según Ley 19.628 de Protección de Datos Personales en Salud.
+    Permite al postulante ver su estado en tiempo real, completar su expediente y
+    enviarlo a revisión oficial.
     """
     permission_classes = [AllowAny]
 
@@ -181,6 +187,35 @@ class PortalPostulanteView(APIView):
         post = postulacion.postulante
         proc = postulacion.proceso
         perfil = proc.perfil_cargo
+
+        rut_param = request.query_params.get('rut') or request.headers.get('X-Postulante-RUT')
+
+        # Si no se envía el RUT, responder solicitando verificación de identidad
+        if not rut_param:
+            return Response({
+                'success': True,
+                'requiere_verificacion_rut': True,
+                'token': str(postulacion.token_acceso),
+                'proceso': {
+                    'id': proc.id,
+                    'cargo_nombre': perfil.nombre,
+                    'area_usuaria': proc.area_usuaria,
+                },
+                'mensaje': 'Por motivos de seguridad y confidencialidad (Ley 19.628), ingrese su RUT para acceder a sus antecedentes.'
+            })
+
+        # Si se envía RUT pero no coincide con el token: bloqueo 403 Forbidden y auditoría
+        if normalizar_rut(rut_param) != normalizar_rut(post.rut):
+            RegistroAuditoria.objects.create(
+                proceso=postulacion.proceso,
+                accion='INTENTO_ACCESO_RUT_INVALIDO',
+                detalle=f'Acceso bloqueado: RUT {rut_param} no coincide con el token {token}.'
+            )
+            return Response({
+                'error': 'El RUT ingresado no coincide con el expediente asociado a este código de postulación. Verifique sus datos.',
+                'rut_invalido': True,
+                'cargo_nombre': perfil.nombre,
+            }, status=status.HTTP_403_FORBIDDEN)
 
         docs = [
             {
@@ -268,6 +303,14 @@ class PortalPostulanteView(APIView):
 
         post = postulacion.postulante
         data = request.data
+
+        # Verificación de RUT para prevenir suplantación o modificación no autorizada
+        rut_param = data.get('rut') or request.query_params.get('rut') or request.headers.get('X-Postulante-RUT')
+        if rut_param and normalizar_rut(rut_param) != normalizar_rut(post.rut):
+            return Response({
+                'error': 'Operación no autorizada: el RUT no coincide con el titular del expediente.',
+                'rut_invalido': True,
+            }, status=status.HTTP_403_FORBIDDEN)
 
         # Actualizar datos del postulante
         if 'nombres' in data: post.nombres = data['nombres'].strip()

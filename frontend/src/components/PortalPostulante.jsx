@@ -18,12 +18,19 @@ import {
 
 const API_BASE = (import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000') + '/api';
 
-export default function PortalPostulante({ token, onVolver, dark, setDark }) {
+export default function PortalPostulante({ token, initialRut = '', onVolver, dark, setDark }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successFeedback, setSuccessFeedback] = useState('');
   const [portalData, setPortalData] = useState(null);
+
+  // Verificación de RUT para doble factor de seguridad
+  const [rutIngresado, setRutIngresado] = useState(initialRut || '');
+  const [rutVerificado, setRutVerificado] = useState(false);
+  const [rutInputTemporal, setRutInputTemporal] = useState(initialRut || '');
+  const [rutError, setRutError] = useState('');
+  const [verificandoRut, setVerificandoRut] = useState(false);
 
   // Formulario editable del postulante
   const [formData, setFormData] = useState({
@@ -42,23 +49,41 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
   const [nuevoDocNombre, setNuevoDocNombre] = useState('');
   const [nuevoDocTipo, setNuevoDocTipo] = useState('certificado');
 
-  // Cargar datos por Token seguro
-  const fetchPortalData = async (tokenToFetch) => {
+  // Cargar datos por Token seguro + RUT
+  const fetchPortalData = async (tokenToFetch, rutToVerify = rutIngresado) => {
     setLoading(true);
     setError('');
+    setRutError('');
     try {
-      const res = await fetch(`${API_BASE}/portal-postulante/${tokenToFetch}/`);
+      const query = rutToVerify ? `?rut=${encodeURIComponent(rutToVerify.trim())}` : '';
+      const res = await fetch(`${API_BASE}/portal-postulante/${tokenToFetch}/${query}`);
+      const data = await res.json();
+
       if (!res.ok) {
+        if (res.status === 403 || data.rut_invalido) {
+          setRutError(data.error || 'El RUT ingresado no coincide con el expediente de este enlace de postulación.');
+          setRutVerificado(false);
+          setLoading(false);
+          return;
+        }
         if (res.status === 404) {
           throw new Error('El enlace de postulación no es válido o ha expirado. Verifique el token provisto.');
         }
-        throw new Error(`Error en el servidor (${res.status}). Intente nuevamente.`);
+        throw new Error(data.error || `Error en el servidor (${res.status}). Intente nuevamente.`);
       }
-      const data = await res.json();
+
       setPortalData(data);
 
-      // Pre-cargar formulario
+      if (data.requiere_verificacion_rut) {
+        setRutVerificado(false);
+        setLoading(false);
+        return;
+      }
+
+      // Si tiene postulante, está 100% verificado
       if (data.postulante) {
+        setRutVerificado(true);
+        setRutIngresado(data.postulante.rut || rutToVerify);
         setFormData({
           nombres: data.postulante.nombres || '',
           apellidos: data.postulante.apellidos || '',
@@ -70,9 +95,8 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
           anios_experiencia: data.postulante.anios_experiencia || 0,
           experiencia: data.postulante.experiencia || '',
         });
+        setDocumentos(data.documentos || []);
       }
-
-      setDocumentos(data.documentos || []);
     } catch (err) {
       setError(err.message || 'No fue posible cargar los datos de la postulación.');
     } finally {
@@ -82,12 +106,24 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
 
   useEffect(() => {
     if (token) {
-      fetchPortalData(token);
+      fetchPortalData(token, initialRut);
     } else {
       setError('No se ha proporcionado un token de acceso seguro.');
       setLoading(false);
     }
-  }, [token]);
+  }, [token, initialRut]);
+
+  const handleVerificarRut = async (e) => {
+    if (e) e.preventDefault();
+    if (!rutInputTemporal.trim()) {
+      setRutError('Debe ingresar su RUT para verificar su identidad.');
+      return;
+    }
+    setVerificandoRut(true);
+    setRutError('');
+    await fetchPortalData(token, rutInputTemporal.trim());
+    setVerificandoRut(false);
+  };
 
   // Manejar cambios en formulario
   const handleInputChange = (field, value) => {
@@ -116,6 +152,7 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
     try {
       const payload = {
         ...formData,
+        rut: rutIngresado,
         accion, // 'guardar' o 'enviar'
         documentos_declarados: documentos.map((d) => ({
           nombre: d.nombre,
@@ -132,14 +169,15 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
       });
 
       if (!res.ok) {
-        throw new Error('Hubo un inconveniente al registrar la postulación en el servidor.');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Hubo un inconveniente al registrar la postulación en el servidor.');
       }
 
       const result = await res.json();
       setSuccessFeedback(result.mensaje || 'Información procesada exitosamente.');
 
       // Recargar datos actualizados
-      await fetchPortalData(token);
+      await fetchPortalData(token, rutIngresado);
     } catch (err) {
       setError(err.message || 'Error al guardar la información.');
     } finally {
@@ -227,6 +265,87 @@ export default function PortalPostulante({ token, onVolver, dark, setDark }) {
               <button className="btn-erp btn-erp-primary" onClick={onVolver}>
                 Ir a Inicio
               </button>
+            )}
+          </div>
+        ) : portalData && !rutVerificado ? (
+          <div className="card-erp" style={{ maxWidth: 500, margin: '40px auto', padding: '36px 30px', textAlign: 'center', boxShadow: 'var(--erp-shadow-lg)' }}>
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: 'rgba(2, 132, 199, 0.1)',
+              color: 'var(--erp-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto',
+            }}>
+              <IconShield size={28} />
+            </div>
+
+            <span className="badge-erp badge-erp-primary" style={{ marginBottom: 10, display: 'inline-block' }}>
+              Protección de Datos Personales • Ley 19.628
+            </span>
+
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: '6px 0 8px 0', color: 'var(--erp-text)' }}>
+              Verificación de Identidad del Postulante
+            </h2>
+
+            <p style={{ fontSize: 13, color: 'var(--erp-text-muted)', marginBottom: 22, lineHeight: 1.5 }}>
+              Concurso: <strong>{portalData.proceso?.cargo_nombre || 'Cargo Asistencial'}</strong> ({portalData.proceso?.area_usuaria || 'Hospital Penco Lirquén'}).<br />
+              Para consultar el avance de su postulación o completar sus antecedentes, confirme su RUT:
+            </p>
+
+            {rutError && (
+              <div className="login-error-alert" style={{ marginBottom: 18, textAlign: 'left' }}>
+                <IconAlertTriangle size={18} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5 }}>{rutError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleVerificarRut}>
+              <div className="form-group-erp" style={{ textAlign: 'left', marginBottom: 18 }}>
+                <label className="form-label-erp" style={{ fontSize: 13, fontWeight: 700 }}>
+                  RUT del Postulante:
+                </label>
+                <div className="erp-input-box" style={{ height: 44 }}>
+                  <input
+                    type="text"
+                    className="erp-input-field"
+                    placeholder="Ej: 12.345.678-9 o 12345678-9"
+                    value={rutInputTemporal}
+                    onChange={(e) => setRutInputTemporal(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                  <div className="erp-input-icon">
+                    <IconUser size={16} />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn-erp btn-erp-primary"
+                style={{ width: '100%', justifyContent: 'center', padding: '12px 18px', fontSize: 14 }}
+                disabled={verificandoRut}
+              >
+                <IconCheck size={16} />
+                <span>{verificandoRut ? 'Verificando Identidad...' : 'Confirmar y Acceder'}</span>
+              </button>
+            </form>
+
+            {onVolver && (
+              <div style={{ marginTop: 20 }}>
+                <button
+                  type="button"
+                  className="link-splash-loop"
+                  style={{ fontSize: 12 }}
+                  onClick={onVolver}
+                >
+                  Volver al Inicio
+                </button>
+              </div>
             )}
           </div>
         ) : portalData && (

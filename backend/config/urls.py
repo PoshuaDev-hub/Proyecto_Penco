@@ -34,16 +34,19 @@ def api_login(request):
         if user is not None:
             token, _ = Token.objects.get_or_create(user=user)
             grupos = list(user.groups.values_list('name', flat=True))
-            if user.is_superuser or 'Admin' in grupos:
-                rol = 'Administrador General'
-            elif 'RRHH' in grupos:
-                rol = 'Jefa RRHH / Desarrollo Personas'
-            elif 'Psicologo' in grupos:
-                rol = 'Psicologo/a'
-            elif 'Comite' in grupos:
-                rol = 'Comision Evaluadora'
+            if user.is_superuser or 'Admin' in grupos or user.username == 'admin':
+                rol = 'Administrador General TI'
+                rol_code = 'admin'
+            elif 'Mesa' in grupos or user.username in ['mesa.entrada', 'mesa', 'maria.jose']:
+                rol = 'Mesa de Entradas & Admisión'
+                rol_code = 'mesa'
+            elif 'Jefatura' in grupos or 'RRHH' in grupos or user.username in ['jefatura', 'carolina.ruiz']:
+                rol = 'Jefa de Gestión de Personas'
+                rol_code = 'jefatura'
             else:
-                rol = 'Usuario'
+                rol = 'Mesa de Entradas & Admisión'
+                rol_code = 'mesa'
+
             return JsonResponse({
                 'status': 'ok',
                 'token': token.key,
@@ -53,6 +56,7 @@ def api_login(request):
                     'nombre': f"{user.first_name} {user.last_name}".strip() or user.username,
                     'email': user.email,
                     'rol': rol,
+                    'roleCode': rol_code,
                     'is_staff': user.is_staff,
                     'is_superuser': user.is_superuser
                 }

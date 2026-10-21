@@ -8,7 +8,7 @@ from apps.pautas.models import PlantillaFlujo, EtapaProceso, PautaAbordaje
 from apps.preguntas.models import Pregunta, ConexionPregunta
 
 
-GRUPOS = ['Admin', 'RRHH', 'Psicologo', 'Comite']
+GRUPOS = ['Admin', 'Jefatura', 'Mesa', 'RRHH', 'Psicologo', 'Comite']
 
 
 @transaction.atomic
@@ -27,8 +27,10 @@ def run_seed():
         return u
 
     admin = get_user('admin', 'admin@hospital.cl', 'admin123', ['Admin'], True, True)
-    carolina = get_user('carolina.ruiz', 'carolina@hospital.cl', 'penco2026', ['RRHH'], True)
-    maria = get_user('maria.jose', 'maria@hospital.cl', 'penco2026', ['RRHH'], True)
+    carolina = get_user('carolina.ruiz', 'carolina@hospital.cl', 'penco2026', ['Jefatura', 'RRHH'], True)
+    jefatura_alias = get_user('jefatura', 'jefatura@hospital.cl', 'penco2026', ['Jefatura', 'RRHH'], True)
+    maria = get_user('maria.jose', 'maria@hospital.cl', 'penco2026', ['Mesa', 'RRHH'], True)
+    mesa_alias = get_user('mesa.entrada', 'mesa@hospital.cl', 'penco2026', ['Mesa', 'RRHH'], True)
     psico = get_user('psicologa', 'psico@hospital.cl', 'psico123', ['Psicologo'], True)
     comite = get_user('comite1', 'comite@hospital.cl', 'comite123', ['Comite'])
 

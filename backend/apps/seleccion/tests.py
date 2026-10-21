@@ -77,9 +77,20 @@ class PortalPostulanteTests(TestCase):
         }, format='json')
         token = res_gen.json()['token']
 
-        # 2. Cliente anónimo sin credenciales consulta el portal con el token
         anon_client = APIClient()
-        res_portal = anon_client.get(f'/api/portal-postulante/{token}/')
+
+        # 2a. Si no se provee RUT: responde solicitando verificación de identidad por seguridad
+        res_sin_rut = anon_client.get(f'/api/portal-postulante/{token}/')
+        self.assertEqual(res_sin_rut.status_code, 200)
+        self.assertTrue(res_sin_rut.json().get('requiere_verificacion_rut'))
+
+        # 2b. Si se provee un RUT que NO coincide: bloqueo 403 Forbidden
+        res_wrong_rut = anon_client.get(f'/api/portal-postulante/{token}/?rut=99.999.999-9')
+        self.assertEqual(res_wrong_rut.status_code, 403)
+        self.assertTrue(res_wrong_rut.json().get('rut_invalido'))
+
+        # 2c. Con RUT correcto: acceso exitoso a los antecedentes
+        res_portal = anon_client.get(f'/api/portal-postulante/{token}/?rut=17.321.456-K')
         self.assertEqual(res_portal.status_code, 200)
         portal_data = res_portal.json()
         self.assertEqual(portal_data['postulante']['rut'], '17.321.456-K')
@@ -93,9 +104,10 @@ class PortalPostulanteTests(TestCase):
         }, format='json')
         token = res_gen.json()['token']
 
-        # Postulante completa y envía su postulación
+        # Postulante completa y envía su postulación con RUT verificado
         anon_client = APIClient()
         res_submit = anon_client.post(f'/api/portal-postulante/{token}/', {
+            'rut': '19.876.543-2',
             'nombres': 'Carlos',
             'apellidos': 'Gómez Parra',
             'email': 'carlos.gomez@correo.cl',
@@ -110,8 +122,8 @@ class PortalPostulanteTests(TestCase):
         self.assertEqual(res_submit.status_code, 200)
         self.assertTrue(res_submit.json()['enviado'])
 
-        # Al volver a consultar, debe reflejar que fue enviado y que la edición está bloqueada
-        res_portal2 = anon_client.get(f'/api/portal-postulante/{token}/')
+        # Al volver a consultar con su RUT, debe reflejar que fue enviado y que la edición está bloqueada
+        res_portal2 = anon_client.get(f'/api/portal-postulante/{token}/?rut=19.876.543-2')
         data2 = res_portal2.json()
         self.assertFalse(data2['puede_editar'])
         self.assertIsNotNone(data2['postulacion']['fecha_envio'])
@@ -136,7 +148,7 @@ class PortalPostulanteTests(TestCase):
 
         # Postulante verifica su portal y ve que puede editar nuevamente
         anon_client = APIClient()
-        res_portal = anon_client.get(f'/api/portal-postulante/{token}/')
+        res_portal = anon_client.get(f'/api/portal-postulante/{token}/?rut=16.543.210-9')
         portal_data = res_portal.json()
         self.assertTrue(portal_data['puede_editar'])
         self.assertTrue(portal_data['postulacion']['subsanacion_solicitada'])
