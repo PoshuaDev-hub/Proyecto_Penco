@@ -33,8 +33,7 @@ const colors = {
 
 function banner() {
   console.log(`\n${colors.cyan}${colors.bright}========================================================================${colors.reset}`);
-  console.log(`${colors.cyan}${colors.bright}   HOSPITAL_PENCO_IA — Panel Interactivo de Instalación y Control${colors.reset}`);
-  console.log(`${colors.cyan}   Subdirección de Gestión de Personas • Hospital Penco Lirquén${colors.reset}`);
+  console.log(`${colors.cyan}${colors.bright}   HOSPITAL_PENCO_IA — Panel de Instalación y Control${colors.reset}`);
   console.log(`${colors.cyan}   Sistema Multiplataforma (Windows 10/11 & Linux Debian/Ubuntu)${colors.reset}`);
   console.log(`${colors.cyan}${colors.bright}========================================================================${colors.reset}\n`);
 }
@@ -316,13 +315,13 @@ function taskFullAuto() {
 function showMenu(rl) {
   banner();
   console.log(`${colors.bright}Seleccione una opción para continuar:${colors.reset}\n`);
-  console.log(`  ${colors.cyan}[1]${colors.reset} 📦 Verificar e Instalar Dependencias (Node, Python, venv, pip, npm)`);
-  console.log(`  ${colors.cyan}[2]${colors.reset} 🗄️  Crear / Sincronizar Base de Datos Local (Migraciones Django)`);
-  console.log(`  ${colors.cyan}[3]${colors.reset} 🌱 Inyectar Datos de Prueba Institucionales (Seed Hospital Penco)`);
-  console.log(`  ${colors.cyan}[4]${colors.reset} 🧹 Limpiar / Resetear Base de Datos (Seguro: recrea schema limpio)`);
-  console.log(`  ${colors.cyan}[5]${colors.reset} 🚀 Lanzar Todo el Sistema (Backend Django :8000 + Frontend Vite :5173)`);
-  console.log(`  ${colors.cyan}[6]${colors.reset} ⚡ Configuración Completa + Lanzamiento Automático (1 + 2 + 3 + 5)`);
-  console.log(`  ${colors.cyan}[0]${colors.reset} 🚪 Salir\n`);
+  console.log(`  ${colors.cyan}[1]${colors.reset} Verificar e Instalar Dependencias (Node, Python, venv, pip, npm)`);
+  console.log(`  ${colors.cyan}[2]${colors.reset} Crear / Sincronizar Base de Datos Local (Migraciones Django)`);
+  console.log(`  ${colors.cyan}[3]${colors.reset} Inyectar Datos de Prueba Institucionales (Seed Hospital Penco)`);
+  console.log(`  ${colors.cyan}[4]${colors.reset} Limpiar / Resetear Base de Datos (Seguro: recrea schema limpio)`);
+  console.log(`  ${colors.cyan}[5]${colors.reset} Lanzar Todo el Sistema (Backend Django :8000 + Frontend Vite :5173)`);
+  console.log(`  ${colors.cyan}[6]${colors.reset} Configuración Completa + Lanzamiento Automático (1 + 2 + 3 + 5)`);
+  console.log(`  ${colors.cyan}[0]${colors.reset} Salir\n`);
 
   rl.question(`${colors.bright}${colors.yellow}Ingrese opción [0-6]: ${colors.reset}`, (answer) => {
     const opt = answer.trim();

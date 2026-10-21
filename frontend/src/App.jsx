@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PortalPostulante from './components/PortalPostulante';
 import {
   IconHospital,
   IconBriefcase,
@@ -200,6 +201,44 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
   const [showModalPerfil, setShowModalPerfil] = useState(false);
   const [showModalExpediente, setShowModalExpediente] = useState(false);
   const [expedientePostulante, setExpedientePostulante] = useState(null);
+
+  // Portal Público de Postulación y Token Seguro
+  const [portalToken, setPortalToken] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('token') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [mostrarPortalPublico, setMostrarPortalPublico] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.has('token');
+    } catch {
+      return false;
+    }
+  });
+
+  // Modal para Generar Token / Enlace Seguro con RUT
+  const [showModalGenerarToken, setShowModalGenerarToken] = useState(false);
+  const [tokenGenRut, setTokenGenRut] = useState('');
+  const [tokenGenProcesoId, setTokenGenProcesoId] = useState('');
+  const [tokenGenNombre, setTokenGenNombre] = useState('');
+  const [tokenGenEmail, setTokenGenEmail] = useState('');
+  const [tokenGeneradoResultado, setTokenGeneradoResultado] = useState(null);
+  const [tokenGenLoading, setTokenGenLoading] = useState(false);
+
+  // Modal para Gestionar Estado y Mensaje al Postulante
+  const [showModalGestionarEstado, setShowModalGestionarEstado] = useState(false);
+  const [postulacionGestionada, setPostulacionGestionada] = useState(null);
+  const [nuevoEstadoGestion, setNuevoEstadoGestion] = useState('');
+  const [nuevaEtapaGestion, setNuevaEtapaGestion] = useState('recepcion');
+  const [nuevaObsInterna, setNuevaObsInterna] = useState('');
+  const [nuevaObsPostulante, setNuevaObsPostulante] = useState('');
+  const [nuevaSubsanacion, setNuevaSubsanacion] = useState(false);
+  const [guardandoGestion, setGuardandoGestion] = useState(false);
+
 
   // Sistema de Toasts Flotantes Institucionales
   const [toasts, setToasts] = useState([]);
@@ -1032,6 +1071,116 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
     }
   };
 
+  const handleGenerarInvitacionToken = async (e) => {
+    if (e) e.preventDefault();
+    if (!tokenGenRut.trim()) {
+      addToast('warning', 'Validación', 'Debe ingresar el RUT del postulante.');
+      return;
+    }
+    const procId = tokenGenProcesoId || (selectedProceso ? selectedProceso.id : procesos[0]?.id);
+    if (!procId) {
+      addToast('warning', 'Validación', 'Debe seleccionar un concurso o proceso.');
+      return;
+    }
+
+    setTokenGenLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/postulaciones/generar-invitacion/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          rut: tokenGenRut.trim(),
+          proceso_id: procId,
+          nombres: tokenGenNombre.trim(),
+          email: tokenGenEmail.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Error al generar la invitación.');
+      }
+
+      const data = await res.json();
+      setTokenGeneradoResultado(data);
+      addToast('success', 'Enlace Seguro Generado', `Enlace de postulación para RUT ${data.rut} creado con éxito.`);
+
+      // Recargar datos
+      cargarDatos();
+    } catch (err) {
+      addToast('error', 'Error', err.message);
+    } finally {
+      setTokenGenLoading(false);
+    }
+  };
+
+  const handleAbrirGestionarEstado = (postulacion) => {
+    setPostulacionGestionada(postulacion);
+    setNuevoEstadoGestion(postulacion.estado || 'recibida');
+    setNuevaEtapaGestion(postulacion.etapa_actual || 'recepcion');
+    setNuevaObsInterna(postulacion.observaciones || '');
+    setNuevaObsPostulante(postulacion.observacion_postulante || '');
+    setNuevaSubsanacion(!!postulacion.subsanacion_solicitada);
+    setShowModalGestionarEstado(true);
+  };
+
+  const handleGuardarGestionEstado = async (e) => {
+    if (e) e.preventDefault();
+    if (!postulacionGestionada) return;
+
+    setGuardandoGestion(true);
+    try {
+      const res = await fetch(`${API_BASE}/postulaciones/${postulacionGestionada.id}/actualizar-estado-comision/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          estado: nuevoEstadoGestion,
+          etapa_actual: nuevaEtapaGestion,
+          observaciones: nuevaObsInterna,
+          observacion_postulante: nuevaObsPostulante,
+          subsanacion_solicitada: nuevaSubsanacion,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('No se pudo actualizar el estado de la postulación.');
+      }
+
+      const updated = await res.json();
+      addToast('success', 'Estado Actualizado', `Expediente de ${postulacionGestionada.postulante_nombre} actualizado.`);
+      setShowModalGestionarEstado(false);
+      cargarDatos();
+      if (selectedPostulante?.id === postulacionGestionada.id) {
+        setSelectedPostulante(updated);
+      }
+    } catch (err) {
+      addToast('error', 'Error', err.message);
+    } finally {
+      setGuardandoGestion(false);
+    }
+  };
+
+  const handleCopiarLinkPostulante = (token) => {
+    if (!token) return;
+    const url = `${window.location.origin}/?token=${token}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        addToast('success', 'Enlace Copiado', 'Enlace seguro del postulante copiado al portapapeles.');
+      }).catch(() => {
+        addToast('info', 'Enlace Generado', url);
+      });
+    } else {
+      addToast('info', 'Enlace Generado', url);
+    }
+  };
+
+  const handleAbrirPortalParaPostulante = (token) => {
+    if (!token) return;
+    setPortalToken(token);
+    setMostrarPortalPublico(true);
+  };
+
+
   const handleEliminarPostulacion = (postId) => {
     const post = postulaciones.find((p) => p.id === postId);
     openConfirmModal({
@@ -1180,6 +1329,25 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
     );
   }
 
+  // ================= RENDER: PORTAL PÚBLICO DEL POSTULANTE (TOKEN SEGURO) =================
+  if (mostrarPortalPublico && portalToken) {
+    return (
+      <PortalPostulante
+        token={portalToken}
+        dark={dark}
+        setDark={setDark}
+        onVolver={() => {
+          setMostrarPortalPublico(false);
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('token');
+            window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+          } catch {}
+        }}
+      />
+    );
+  }
+
   // ================= RENDER: LOGIN FORM =================
   if (!currentUser) {
     const selectedProfile = ROLES_INSTITUCIONALES.find((r) => r.id === selectedProfileId) || ROLES_INSTITUCIONALES[0];
@@ -1320,6 +1488,64 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                   <div className="login-security-notice">
                     <IconShield size={13} style={{ color: 'var(--erp-primary)', flexShrink: 0 }} />
                     <span>Autenticación con Token</span>
+                  </div>
+
+                  {/* Acceso directo para postulantes externos con token */}
+                  <div style={{
+                    marginTop: '20px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--erp-border)',
+                    textAlign: 'left',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <IconKey size={14} style={{ color: 'var(--erp-primary)' }} />
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--erp-text-main)' }}>
+                        ¿Eres Postulante a un Concurso?
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '11px', color: 'var(--erp-text-muted)', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                      Ingresa tu token o enlace único para completar tu expediente o revisar el avance de tu postulación:
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        className="form-control-erp"
+                        placeholder="Token o enlace (ej: 8a5d3f1a...)"
+                        style={{ fontSize: '12px', padding: '6px 10px' }}
+                        value={portalToken}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          if (val.includes('token=')) {
+                            try {
+                              const parsed = new URL(val).searchParams.get('token') || val.split('token=')[1];
+                              setPortalToken(parsed);
+                              return;
+                            } catch {
+                              const parsed = val.split('token=')[1]?.split('&')[0];
+                              if (parsed) {
+                                setPortalToken(parsed);
+                                return;
+                              }
+                            }
+                          }
+                          setPortalToken(val);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-erp btn-erp-primary"
+                        style={{ whiteSpace: 'nowrap', fontSize: '12px', padding: '6px 14px' }}
+                        onClick={() => {
+                          if (!portalToken.trim()) {
+                            addToast('warning', 'Token Requerido', 'Ingresa tu token o enlace único para continuar.');
+                            return;
+                          }
+                          setMostrarPortalPublico(true);
+                        }}
+                      >
+                        Ingresar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1553,10 +1779,27 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                 </button>
               )}
               {activeTab === 'filtro' && (
-                <button className="btn-erp btn-erp-primary" onClick={() => setShowModalPostulante(true)}>
-                  <IconPlus size={16} />
-                  <span>Inscribir Postulante</span>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn-erp btn-erp-secondary"
+                    onClick={() => {
+                      setTokenGenRut('');
+                      setTokenGenNombre('');
+                      setTokenGenEmail('');
+                      setTokenGeneradoResultado(null);
+                      setTokenGenProcesoId(selectedProceso ? selectedProceso.id : (procesos[0]?.id || ''));
+                      setShowModalGenerarToken(true);
+                    }}
+                    title="Generar enlace seguro vía RUT para que el postulante ingrese sus antecedentes"
+                  >
+                    <IconKey size={16} />
+                    <span>Generar Enlace con RUT</span>
+                  </button>
+                  <button className="btn-erp btn-erp-primary" onClick={() => setShowModalPostulante(true)}>
+                    <IconPlus size={16} />
+                    <span>Inscribir Manual</span>
+                  </button>
+                </div>
               )}
               {activeTab === 'pautas' && (
                 <button className="btn-erp btn-erp-primary" onClick={() => setShowModalPregunta(true)}>
@@ -1936,11 +2179,23 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                               {post.postulante_formacion || 'Profesional de la Salud'}
                             </p>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                               <span className={`doc-status-pill ${post.documentos_completos ? 'ok' : 'pending'}`}>
                                 {post.documentos_completos ? <IconCheck size={12} /> : <IconX size={12} />}
                                 <span>{post.documentos_completos ? 'Expediente SIS Verificado' : 'Documentación Incompleta'}</span>
                               </span>
+                              {post.token_acceso && (
+                                <span className="doc-status-pill" style={{ background: 'rgba(2, 132, 199, 0.1)', color: 'var(--erp-primary)', borderColor: 'rgba(2, 132, 199, 0.25)' }}>
+                                  <IconKey size={11} />
+                                  <span>Token Activo</span>
+                                </span>
+                              )}
+                              {post.subsanacion_solicitada && (
+                                <span className="doc-status-pill" style={{ background: 'rgba(239, 68, 68, 0.12)', color: 'var(--erp-danger)', borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+                                  <IconAlertTriangle size={11} />
+                                  <span>Subsanación</span>
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -2017,6 +2272,82 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                             <p style={{ fontSize: 13, marginTop: 2 }}>{selectedPostulante.postulante_experiencia || 'Experiencia en servicios de salud.'}</p>
                           </div>
 
+                          {/* ================= BLOQUE DE TOKEN Y ENLACE SEGURO ================= */}
+                          <div style={{
+                            background: 'var(--erp-bg-body)',
+                            padding: '12px 14px',
+                            borderRadius: '6px',
+                            marginBottom: '16px',
+                            border: '1px solid var(--erp-border)',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <IconKey size={16} style={{ color: 'var(--erp-primary)' }} />
+                                <strong style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--erp-text-main)' }}>
+                                  Enlace Seguro de Postulación (Token):
+                                </strong>
+                              </div>
+                              <span className={`badge-erp ${selectedPostulante.fecha_envio ? 'badge-erp-success' : selectedPostulante.subsanacion_solicitada ? 'badge-erp-danger' : 'badge-erp-warning'}`}>
+                                {selectedPostulante.fecha_envio ? 'Postulación Enviada' : selectedPostulante.subsanacion_solicitada ? 'Subsanación Solicitada' : 'Borrador / Pendiente de Envío'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
+                              <input
+                                type="text"
+                                readOnly
+                                className="form-control-erp"
+                                style={{ fontSize: '12px', background: 'var(--erp-bg-card)', fontFamily: 'monospace' }}
+                                value={selectedPostulante.token_acceso ? `${window.location.origin}/?token=${selectedPostulante.token_acceso}` : 'Token no asignado'}
+                              />
+                              <button
+                                type="button"
+                                className="btn-erp btn-erp-secondary btn-erp-sm"
+                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => handleCopiarLinkPostulante(selectedPostulante.token_acceso)}
+                                title="Copiar enlace directo del postulante"
+                                disabled={!selectedPostulante.token_acceso}
+                              >
+                                Copiar
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-erp btn-erp-primary btn-erp-sm"
+                                style={{ whiteSpace: 'nowrap' }}
+                                onClick={() => handleAbrirPortalParaPostulante(selectedPostulante.token_acceso)}
+                                title="Abrir portal del postulante para auditar"
+                                disabled={!selectedPostulante.token_acceso}
+                              >
+                                Abrir Portal
+                              </button>
+                            </div>
+
+                            {selectedPostulante.observacion_postulante && (
+                              <div style={{
+                                marginTop: '10px',
+                                fontSize: '12px',
+                                padding: '8px 10px',
+                                background: 'rgba(2, 132, 199, 0.08)',
+                                borderRadius: '4px',
+                                borderLeft: '3px solid var(--erp-primary)',
+                              }}>
+                                <strong>Mensaje al Postulante:</strong> {selectedPostulante.observacion_postulante}
+                              </div>
+                            )}
+
+                            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                              <button
+                                type="button"
+                                className="btn-erp btn-erp-sm btn-erp-secondary"
+                                onClick={() => handleAbrirGestionarEstado(selectedPostulante)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                              >
+                                <IconSettings size={14} />
+                                <span>Gestionar Etapa, Mensaje & Subsanación</span>
+                              </button>
+                            </div>
+                          </div>
+
                           <div style={{ background: 'var(--erp-bg-body)', padding: 12, borderRadius: 6, marginBottom: 16 }}>
                             <strong style={{ fontSize: 12, color: 'var(--erp-text-muted)', textTransform: 'uppercase' }}>
                               Semáforo Documental de Comité:
@@ -2081,6 +2412,14 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                             >
                               <IconCheckCircle size={15} />
                               <span>Aprobar Selección</span>
+                            </button>
+                            <button
+                              className="btn-erp btn-erp-secondary"
+                              onClick={() => handleAbrirGestionarEstado(selectedPostulante)}
+                              title="Configurar etapa oficial, mensaje público y subsanación"
+                            >
+                              <IconSettings size={15} />
+                              <span>Gestión Avanzada</span>
                             </button>
                           </div>
                         </div>
@@ -3641,6 +3980,270 @@ Estoy programado para asistir en el diseño de incidentes críticos, rúbricas d
                 Cerrar Expediente
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: GENERAR TOKEN / ENLACE PÚBLICO CON RUT ================= */}
+      {showModalGenerarToken && (
+        <div className="modal-overlay-erp" style={{ zIndex: 2000 }}>
+          <div className="modal-dialog-erp">
+            <div className="modal-header-erp">
+              <h3 className="modal-title-erp">
+                <IconKey size={18} />
+                <span>Generar Enlace Seguro de Postulación (RUT)</span>
+              </h3>
+              <button className="modal-close-erp" onClick={() => setShowModalGenerarToken(false)}>
+                <IconX size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleGenerarInvitacionToken}>
+              <div className="modal-body-erp">
+                <p style={{ fontSize: '13px', color: 'var(--erp-text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Genera una URL criptográfica única (token UUID v4) vinculada al RUT del postulante. Al abrir el enlace, el postulante podrá completar sus antecedentes personales, registro SIS, adjuntar documentación y enviar su postulación oficial sin requerir usuario ni contraseña.
+                </p>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">RUT del Postulante (Obligatorio):</label>
+                  <input
+                    type="text"
+                    className="form-control-erp"
+                    placeholder="Ej: 12.345.678-9 o 12345678-9"
+                    value={tokenGenRut}
+                    onChange={(e) => setTokenGenRut(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">Concurso / Proceso Ley 18.834:</label>
+                  <select
+                    className="form-control-erp"
+                    value={tokenGenProcesoId}
+                    onChange={(e) => setTokenGenProcesoId(e.target.value)}
+                    required
+                  >
+                    {procesos.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        #{p.id} - {p.perfil_cargo_nombre} ({p.area_usuaria})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">Nombre Completo (Opcional si ya se conoce):</label>
+                  <input
+                    type="text"
+                    className="form-control-erp"
+                    placeholder="Ej: Andrea Soto Morales"
+                    value={tokenGenNombre}
+                    onChange={(e) => setTokenGenNombre(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">Correo Electrónico de Contacto (Opcional):</label>
+                  <input
+                    type="email"
+                    className="form-control-erp"
+                    placeholder="Ej: andrea.soto@correo.cl"
+                    value={tokenGenEmail}
+                    onChange={(e) => setTokenGenEmail(e.target.value)}
+                  />
+                </div>
+
+                {tokenGeneradoResultado && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '14px',
+                    borderRadius: '8px',
+                    background: 'rgba(16, 185, 129, 0.08)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--erp-success)' }}>
+                      <IconCheckCircle size={18} />
+                      <strong style={{ fontSize: '13px' }}>¡Enlace Seguro Generado con Éxito!</strong>
+                    </div>
+                    <p style={{ fontSize: '12px', color: 'var(--erp-text-muted)', margin: '0 0 10px 0' }}>
+                      Copia el enlace y compártelo con el postulante para que ingrese a su portal:
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        readOnly
+                        className="form-control-erp"
+                        style={{ fontSize: '12px', fontFamily: 'monospace', background: 'var(--erp-bg-card)' }}
+                        value={tokenGeneradoResultado.url_portal}
+                      />
+                      <button
+                        type="button"
+                        className="btn-erp btn-erp-primary"
+                        onClick={() => handleCopiarLinkPostulante(tokenGeneradoResultado.token)}
+                      >
+                        Copiar
+                      </button>
+                    </div>
+                    <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn-erp btn-erp-secondary btn-erp-sm"
+                        onClick={() => {
+                          setShowModalGenerarToken(false);
+                          handleAbrirPortalParaPostulante(tokenGeneradoResultado.token);
+                        }}
+                      >
+                        Abrir Portal Ahora
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer-erp">
+                <button
+                  type="button"
+                  className="btn-erp btn-erp-secondary"
+                  onClick={() => setShowModalGenerarToken(false)}
+                >
+                  {tokenGeneradoResultado ? 'Cerrar' : 'Cancelar'}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-erp btn-erp-primary"
+                  disabled={tokenGenLoading}
+                >
+                  <IconKey size={16} />
+                  <span>{tokenGenLoading ? 'Generando...' : 'Generar Enlace Seguro'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: GESTIONAR ESTADO, MENSAJE Y SUBSANACIÓN ================= */}
+      {showModalGestionarEstado && postulacionGestionada && (
+        <div className="modal-overlay-erp" style={{ zIndex: 2000 }}>
+          <div className="modal-dialog-erp">
+            <div className="modal-header-erp">
+              <h3 className="modal-title-erp">
+                <IconSettings size={18} />
+                <span>Gestión de Comisión • {postulacionGestionada.postulante_nombre}</span>
+              </h3>
+              <button className="modal-close-erp" onClick={() => setShowModalGestionarEstado(false)}>
+                <IconX size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleGuardarGestionEstado}>
+              <div className="modal-body-erp">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                  <div className="form-group-erp">
+                    <label className="form-label-erp">Estado Oficial de la Postulación:</label>
+                    <select
+                      className="form-control-erp"
+                      value={nuevoEstadoGestion}
+                      onChange={(e) => setNuevoEstadoGestion(e.target.value)}
+                    >
+                      <option value="recibida">Recibida en Mesa Digital</option>
+                      <option value="en_revision">En Revisión Curricular</option>
+                      <option value="preseleccionada">Preseleccionado/a</option>
+                      <option value="subsanacion">En Subsanación de Antecedentes</option>
+                      <option value="descartada">Descartada por Bases</option>
+                      <option value="aprobada">Seleccionada / Aprobada</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group-erp">
+                    <label className="form-label-erp">Etapa Normada del Proceso:</label>
+                    <select
+                      className="form-control-erp"
+                      value={nuevaEtapaGestion}
+                      onChange={(e) => setNuevaEtapaGestion(e.target.value)}
+                    >
+                      <option value="recepcion">4. Recepción de Antecedentes</option>
+                      <option value="revision_curricular">5. Revisión Curricular Comité</option>
+                      <option value="entrevistas_tecnicas">6. Entrevistas Técnicas</option>
+                      <option value="evaluacion_psicolaboral">7. Evaluación Psicolaboral</option>
+                      <option value="informe_directora">8. Informe a la Directora</option>
+                      <option value="integracion">9. Integración y Cierre</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: '6px',
+                  background: 'var(--erp-bg-body)',
+                  border: '1px solid var(--erp-border)',
+                  marginBottom: '14px',
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={nuevaSubsanacion}
+                      onChange={(e) => setNuevaSubsanacion(e.target.checked)}
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                    <div>
+                      <strong style={{ fontSize: '13px', color: 'var(--erp-text-main)' }}>
+                        Habilitar Subsanación de Documentos al Postulante
+                      </strong>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--erp-text-muted)' }}>
+                        Al marcar esta opción, el formulario en el portal público del postulante volverá a habilitarse para que pueda rectificar datos o adjuntar antecedentes faltantes.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">
+                    Mensaje / Observación Visible para el Postulante:
+                  </label>
+                  <textarea
+                    className="textarea-control-erp"
+                    rows="3"
+                    placeholder="Ej: Su postulación fue recibida conforme y se encuentra en etapa de revisión curricular. Por favor manténgase atento..."
+                    value={nuevaObsPostulante}
+                    onChange={(e) => setNuevaObsPostulante(e.target.value)}
+                  />
+                  <small style={{ color: 'var(--erp-text-muted)', fontSize: '11px', display: 'block', marginTop: '4px' }}>
+                    Este texto se mostrará directamente en el banner del portal público al que accede el postulante.
+                  </small>
+                </div>
+
+                <div className="form-group-erp">
+                  <label className="form-label-erp">
+                    Observaciones Internas del Comité (No visibles al postulante):
+                  </label>
+                  <textarea
+                    className="textarea-control-erp"
+                    rows="2"
+                    placeholder="Notas internas de la comisión evaluadora..."
+                    value={nuevaObsInterna}
+                    onChange={(e) => setNuevaObsInterna(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer-erp">
+                <button
+                  type="button"
+                  className="btn-erp btn-erp-secondary"
+                  onClick={() => setShowModalGestionarEstado(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-erp btn-erp-primary"
+                  disabled={guardandoGestion}
+                >
+                  <IconCheck size={16} />
+                  <span>{guardandoGestion ? 'Guardando...' : 'Guardar Resolución y Notificar'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

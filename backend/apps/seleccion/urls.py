@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     PerfilCargoViewSet, ProcesoSeleccionViewSet, PostulanteViewSet,
     PostulacionViewSet, DocumentoPostulacionViewSet, HitoProcesoViewSet,
-    RegistroAuditoriaViewSet,
+    RegistroAuditoriaViewSet, PortalPostulanteView,
 )
 
 router = DefaultRouter()
@@ -15,4 +15,8 @@ router.register('documentos', DocumentoPostulacionViewSet)
 router.register('hitos', HitoProcesoViewSet)
 router.register('auditoria', RegistroAuditoriaViewSet)
 
-urlpatterns = [path('', include(router.urls))]
+urlpatterns = [
+    path('portal-postulante/<uuid:token>/', PortalPostulanteView.as_view(), name='portal-postulante'),
+    path('', include(router.urls)),
+]
+

@@ -1,5 +1,7 @@
+import uuid
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class PerfilCargo(models.Model):
@@ -101,6 +103,9 @@ class Postulante(models.Model):
     email = models.EmailField('Email', blank=True)
     telefono = models.CharField('Telefono', max_length=40, blank=True)
     formacion_academica = models.TextField('Formacion academica', blank=True)
+    titulo_profesional = models.CharField('Titulo profesional', max_length=150, blank=True)
+    registro_sis = models.CharField('Registro Superintendencia de Salud (SIS)', max_length=60, blank=True)
+    anios_experiencia = models.PositiveIntegerField('Años de experiencia', default=0)
     experiencia = models.TextField('Experiencia', blank=True)
     creado_en = models.DateTimeField('Creado en', auto_now_add=True)
 
@@ -114,18 +119,22 @@ class Postulante(models.Model):
 
 
 class Postulacion(models.Model):
+    ESTADO_PENDIENTE = 'pendiente_envio'
     ESTADO_RECIBIDA = 'recibida'
     ESTADO_EN_REVISION = 'en_revision'
+    ESTADO_SUBSANACION = 'subsanacion'
     ESTADO_PRESELECCIONADA = 'preseleccionada'
     ESTADO_DESCARTADA = 'descartada'
     ESTADO_APROBADA = 'aprobada'
 
     ESTADO_CHOICES = [
+        (ESTADO_PENDIENTE, 'Pendiente de Envio'),
         (ESTADO_RECIBIDA, 'Recibida'),
-        (ESTADO_EN_REVISION, 'En revision'),
+        (ESTADO_EN_REVISION, 'En Revision Curricular'),
+        (ESTADO_SUBSANACION, 'Subsanacion Solicitada'),
         (ESTADO_PRESELECCIONADA, 'Preseleccionada'),
-        (ESTADO_DESCARTADA, 'Descartada'),
-        (ESTADO_APROBADA, 'Aprobada'),
+        (ESTADO_DESCARTADA, 'Descartada por Bases'),
+        (ESTADO_APROBADA, 'Aprobada / Seleccionada'),
     ]
 
     proceso = models.ForeignKey(
@@ -134,11 +143,17 @@ class Postulacion(models.Model):
     postulante = models.ForeignKey(
         Postulante, on_delete=models.PROTECT, related_name='postulaciones',
         verbose_name='Postulante', db_index=True)
+    token_acceso = models.UUIDField(
+        'Token de acceso publico', default=uuid.uuid4, null=True, blank=True, db_index=True)
     fecha_postulacion = models.DateTimeField('Fecha de postulacion', auto_now_add=True)
+    fecha_envio = models.DateTimeField('Fecha de envio definitivo', null=True, blank=True)
     estado = models.CharField('Estado', max_length=30, choices=ESTADO_CHOICES,
                              default=ESTADO_RECIBIDA, db_index=True)
-    observaciones = models.TextField('Observaciones', blank=True)
+    etapa_actual = models.CharField('Etapa actual', max_length=60, default='recepcion', db_index=True)
+    observaciones = models.TextField('Observaciones internas comision', blank=True)
+    observacion_postulante = models.TextField('Mensaje oficial para el postulante', blank=True)
     documentos_completos = models.BooleanField('Documentos completos', default=False)
+    subsanacion_solicitada = models.BooleanField('Requiere subsanacion', default=False)
 
     class Meta:
         verbose_name = 'Postulacion'
@@ -146,18 +161,28 @@ class Postulacion(models.Model):
         ordering = ['-fecha_postulacion']
         unique_together = [('proceso', 'postulante')]
 
+    def save(self, *args, **kwargs):
+        if not self.token_acceso:
+            self.token_acceso = uuid.uuid4()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'{self.postulante} - {self.proceso}'
+
 
 
 class DocumentoPostulacion(models.Model):
     TIPO_CV = 'cv'
     TIPO_CERTIFICADO = 'certificado'
+    TIPO_SIS = 'registro_sis'
+    TIPO_ANTECEDENTES = 'antecedentes'
     TIPO_OTRO = 'otro'
     TIPO_CHOICES = [
-        (TIPO_CV, 'Curriculum'),
-        (TIPO_CERTIFICADO, 'Certificado'),
-        (TIPO_OTRO, 'Otro'),
+        (TIPO_CV, 'Curriculum Vitae'),
+        (TIPO_CERTIFICADO, 'Certificado de Titulo'),
+        (TIPO_SIS, 'Registro Nacional Prestadores SIS'),
+        (TIPO_ANTECEDENTES, 'Certificado de Antecedentes'),
+        (TIPO_OTRO, 'Otro Antecedente'),
     ]
 
     postulacion = models.ForeignKey(

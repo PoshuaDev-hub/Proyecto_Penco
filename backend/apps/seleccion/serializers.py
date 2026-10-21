@@ -26,6 +26,11 @@ class PostulacionSerializer(serializers.ModelSerializer):
     postulante_telefono = serializers.ReadOnlyField(source='postulante.telefono')
     postulante_experiencia = serializers.ReadOnlyField(source='postulante.experiencia')
     postulante_formacion = serializers.ReadOnlyField(source='postulante.formacion_academica')
+    postulante_titulo = serializers.ReadOnlyField(source='postulante.titulo_profesional')
+    postulante_sis = serializers.ReadOnlyField(source='postulante.registro_sis')
+    postulante_anios_exp = serializers.ReadOnlyField(source='postulante.anios_experiencia')
+    proceso_cargo = serializers.ReadOnlyField(source='proceso.perfil_cargo.nombre')
+    proceso_area = serializers.ReadOnlyField(source='proceso.area_usuaria')
     estado_display = serializers.ReadOnlyField(source='get_estado_display')
     documentos = DocumentoPostulacionSerializer(many=True, read_only=True)
 

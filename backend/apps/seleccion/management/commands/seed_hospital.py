@@ -46,17 +46,25 @@ def run_seed():
         perfil_objs[nombre] = p
 
     postulantes_data = [
-        ('11.111.111-1', 'Ana', 'Perez', 'ana@x.cl'),
-        ('22.222.222-2', 'Luis', 'Soto', 'luis@x.cl'),
-        ('33.333.333-3', 'Maria', 'Lopez', 'maria@x.cl'),
-        ('44.444.444-4', 'Juan', 'Rojas', 'juan@x.cl'),
-        ('55.555.555-5', 'Carla', 'Munoz', 'carla@x.cl'),
+        ('11.111.111-1', 'Ana', 'Pérez Morales', 'ana.perez@hospital.cl', 'Enfermera Universitaria', 'SIS-4512-ENF', 4, '4 años en UCI y Paciente Crítico'),
+        ('22.222.222-2', 'Luis', 'Soto Carrillo', 'luis.soto@hospital.cl', 'Kinesiólogo Intensivista', 'SIS-8921-KIN', 3, '3 años en Kinesiterapia Respiratoria'),
+        ('33.333.333-3', 'María José', 'López Vega', 'mariajose.lopez@hospital.cl', 'Médico Cirujano', 'SIS-1045-MED', 5, '5 años en Urgencias y Medicina Interna'),
+        ('44.444.444-4', 'Juan Pablo', 'Rojas Silva', 'juan.rojas@hospital.cl', 'Técnico en Enfermería Superior (TENS)', 'SIS-6612-TENS', 2, '2 años en Pabellón Quirúrgico'),
+        ('55.555.555-5', 'Carla', 'Muñoz Fuentes', 'carla.munoz@hospital.cl', 'Enfermera Clínica', 'SIS-7741-ENF', 6, '6 años en Servicio de Medicina'),
     ]
     postulantes = []
-    for rut, n, a, e in postulantes_data:
+    for rut, n, a, e, tit, sis, anios, exp in postulantes_data:
         p, _ = Postulante.objects.get_or_create(
-            rut=rut, defaults={'nombres': n, 'apellidos': a, 'email': e,
-                               'formacion_academica': 'Formacion ficticia', 'experiencia': 'Experiencia ficticia'})
+            rut=rut, defaults={
+                'nombres': n,
+                'apellidos': a,
+                'email': e,
+                'formacion_academica': tit,
+                'titulo_profesional': tit,
+                'registro_sis': sis,
+                'anios_experiencia': anios,
+                'experiencia': exp
+            })
         postulantes.append(p)
 
     for perfil_nombre in ['Enfermero/a UCI', 'Administrativo/a']:
