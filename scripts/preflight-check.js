@@ -6,7 +6,7 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const result = spawnSync(process.execPath, [path.join(__dirname, 'setup.js')], {
+const result = spawnSync(process.execPath, [path.join(__dirname, 'setup.js'), '--auto'], {
   stdio: 'inherit',
   cwd: path.resolve(__dirname, '..'),
 });

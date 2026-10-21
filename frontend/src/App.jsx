@@ -23,6 +23,10 @@ import {
   IconFileText,
   IconAlertTriangle,
   IconKey,
+  IconMessageSquare,
+  IconSend,
+  IconBot,
+  IconSettings,
 } from './components/Icons';
 
 const API_BASE = (import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000') + '/api';
@@ -53,19 +57,19 @@ const ROLES_INSTITUCIONALES = [
     passwordDefault: 'penco2026',
     initials: 'CR',
     color: '#0284c7',
-    desc: 'Validación de perfiles y resoluciones Ley 18.834',
+    desc: 'Jefatura RRHH • Apertura de concursos, validación y avance de etapas normadas Ley 18.834',
   },
   {
     id: 'mariajose',
     nombre: 'María José',
     nombreCompleto: 'María José Duarte',
     cargo: 'Analista de Procesos de Selección',
-    cargoCorto: 'Analista',
+    cargoCorto: 'Mesa de Entradas',
     username: 'maria.jose',
     passwordDefault: 'penco2026',
     initials: 'MD',
     color: '#7c3aed',
-    desc: 'Recepción y revisión de expedientes digitales',
+    desc: 'Mesa de Entradas • Ingreso de postulantes, carga de certificados y modificación de expedientes',
   },
   {
     id: 'psicologo',
@@ -77,31 +81,31 @@ const ROLES_INSTITUCIONALES = [
     passwordDefault: 'psico123',
     initials: 'PL',
     color: '#0d9488',
-    desc: 'Banco adaptativo y rúbricas por competencias',
+    desc: 'Psicóloga Laboral • Banco adaptativo, incidentes críticos y rúbricas por competencias',
   },
   {
     id: 'comision',
     nombre: 'Comisión Evaluadora',
     nombreCompleto: 'Comisión / Jefatura UCI',
     cargo: 'Comité Técnico y Evaluador Clínico',
-    cargoCorto: 'Comité UCI',
+    cargoCorto: 'Comité Técnico',
     username: 'comite1',
     passwordDefault: 'comite123',
     initials: 'CE',
     color: '#16a34a',
-    desc: 'Evaluación técnica curricular y actas',
+    desc: 'Comisión Evaluadora • Calificación técnica, acuerdos colegiados y avance de etapas',
   },
   {
     id: 'admin',
     nombre: 'Administrador TI',
     nombreCompleto: 'Administrador General TI',
     cargo: 'Soporte y Auditoría Institucional',
-    cargoCorto: 'Soporte TI',
+    cargoCorto: 'Admin TI & Datos',
     username: 'admin',
     passwordDefault: 'admin123',
     initials: 'TI',
     color: '#475569',
-    desc: 'Soporte de accesos y pista de auditoría',
+    desc: 'Admin TI & Datos • Control inmutable de datos, auditoría de usuarios y configuración de IA',
   },
 ];
 
@@ -132,11 +136,44 @@ export default function App() {
   const [splashModules, setSplashModules] = useState([]);
   const [splashExiting, setSplashExiting] = useState(false);
 
-  // Asistente IA - estado de pruebas adversariales
+  // Asistente IA - Chatbot, Gobernanza y Pruebas
+  const [iaActiveSubtab, setIaActiveSubtab] = useState('chatbot');
   const [adversarialInput, setAdversarialInput] = useState('');
   const [adversarialResult, setAdversarialResult] = useState(null);
   const [adversarialHistory, setAdversarialHistory] = useState([]);
-  const [iaActiveSubtab, setIaActiveSubtab] = useState('overview');
+
+  // Configuración Admin de Gobernanza y Guardrails Éticos
+  const [iaConfig, setIaConfig] = useState({
+    persona: 'clinico', // 'clinico' | 'juridico' | 'mesa'
+    temperature: 0.2,
+    guardrailRanking: true,
+    guardrailClinico: true,
+    guardrailSensibles: true,
+    guardrailDiscriminacion: true,
+    guardrailSalarial: true,
+  });
+
+  // Mensajes de la conversación con el Chatbot
+  const [iaChatMessages, setIaChatMessages] = useState([
+    {
+      id: 'msg-init-1',
+      sender: 'bot',
+      text: `¡Bienvenido al Asistente Institucional de Selección del Hospital Penco Lirquén!
+
+Estoy programado para asistir en el diseño de incidentes críticos, rúbricas de evaluación por competencias (1 a 5) y verificación de normativas de la Ley 18.834.
+
+🛡️ **Gobernanza Ética Activa:**
+- Human-in-the-Loop obligatorio: mis aportes son estrictamente consultivos y no vinculantes.
+- Prohibición de rankings automáticos y descarte algorítmico (Ley 18.834 Art. 20).
+- Protección de diagnósticos médicos y datos sensibles (Ley 20.422 / CPR Art. 19).
+
+¿En qué proceso o perfil asistencial requiere apoyo hoy?`,
+      timestamp: '12:00',
+      badge: 'Borrador Consultivo • Ley 18.834',
+    },
+  ]);
+  const [iaChatInput, setIaChatInput] = useState('');
+  const [iaChatLoading, setIaChatLoading] = useState(false);
 
   // Estados de Login (coincidentes con el diseño de la foto)
   const [loginUsername, setLoginUsername] = useState('admin');
@@ -487,31 +524,33 @@ export default function App() {
   };
 
   // ========= MOTOR DE GUARDRAILS ÉTICOS - Asistente IA =========
-  // Implementa las líneas rojas del DESAFIO_PROYECTO_ABP.pdf (Pag. 4)
-  const runAdversarialTest = (inputText) => {
+  // Implementa las líneas rojas del DESAFIO_PROYECTO_ABP.pdf (Pag. 4) y control de gobernanza
+  const evaluateGuardrail = (inputText) => {
     const text = inputText.toLowerCase().trim();
 
-    // Reglas de bloqueo con expresiones regulares
     const BLOCKLIST = [
       {
+        enabled: iaConfig.guardrailRanking,
         pattern: /ranking|puntaje\s+final|orden\s+m\u00e9rito|clasific|mejor\s+candidato|descart.*autom|eliminar\s+autom/i,
         tipo: 'BLOQUEO_RANKING_AUTOM\u00c1TICO',
         nivel: 'critico',
         titulo: 'Ranking Autom\u00e1tico Prohibido',
-        mensaje: 'La IA no puede generar rankings vinculantes ni descartar candidatos autom\u00e1ticamente. El Art. 20 de la Ley 18.834 exige que toda resoluci\u00f3n de seleccion sea adoptada por la Comisi\u00f3n Evaluadora, no por un algoritmo. La decisi\u00f3n es 100% colegiada y humana.',
+        mensaje: 'La IA no puede generar rankings vinculantes ni descartar candidatos autom\u00e1ticamente. El Art. 20 de la Ley 18.834 exige que toda resoluci\u00f3n de selecci\u00f3n sea adoptada por la Comisi\u00f3n Evaluadora colegiada, no por un algoritmo. La decisi\u00f3n es 100% humana y motivada.',
         norma: 'Ley 18.834 Art. 20 | DESAFIO_PROYECTO_ABP.pdf Pag. 4',
-        alternativa: 'Puede solicitarle a la IA que genere un borrador de pauta de evaluaci\u00f3n por competencias que luego es revisado por Carolina Ruiz Parra antes de ser utilizado.',
+        alternativa: 'Puede solicitarle a la IA que genere un borrador de pauta de evaluaci\u00f3n por competencias que luego es revisado y aprobado por la comisi\u00f3n antes de su uso.',
       },
       {
+        enabled: iaConfig.guardrailClinico,
         pattern: /depresi\u00f3n|ansiedad|trastorno|diagn\u00f3stico|salud\s+mental|psicopatolog|personalidad\s+patol|bipolar|esquizofren/i,
         tipo: 'BLOQUEO_DIAGN\u00d3STICO_CL\u00cdNICO',
         nivel: 'critico',
         titulo: 'Diagn\u00f3stico Cl\u00ednico Prohibido',
         mensaje: 'La IA no puede emitir diagn\u00f3sticos de salud mental ni inferir condiciones psicopatol\u00f3gicas de los postulantes. Esto constituye una pr\u00e1ctica discriminatoria y vulnera la Ley 20.422 y la ley 19.284. La evaluaci\u00f3n psicolaboral se limita estrictamente a competencias laborales observables.',
         norma: 'Ley 20.422 | Ley 19.284 | MINSAL Circular 34/2021',
-        alternativa: 'El/la psic\u00f3logo/a laboral puede utilizar el banco adaptativo para dise\u00f1ar preguntas de incidentes cr\u00edticos orientadas a competencias como: manejo de estr\u00e9s, autocuidado y liderazgo.',
+        alternativa: 'El/la psic\u00f3logo/a laboral puede utilizar el banco adaptativo para dise\u00f1ar preguntas de incidentes cr\u00edticos orientadas a competencias como: manejo de estr\u00e9s, autocuidado y trabajo en equipo.',
       },
       {
+        enabled: iaConfig.guardrailSensibles,
         pattern: /religi\u00f3n|ideolog\u00eda|partido\s+pol\u00edtico|orientaci\u00f3n\s+sexual|embaraz|hijos|estado\s+civil|discapacidad\s+f\u00edsica|raza|origen\u00e9tnico/i,
         tipo: 'BLOQUEO_DATO_SENSIBLE',
         nivel: 'critico',
@@ -521,6 +560,7 @@ export default function App() {
         alternativa: 'Los criterios de selecci\u00f3n deben basarse exclusivamente en m\u00e9rito, capacidades, competencias profesionales y requisitos del cargo definidos en el descriptor oficial.',
       },
       {
+        enabled: iaConfig.guardrailDiscriminacion,
         pattern: /mejor\s+hombre|mejor\s+mujer|m\u00e1s\s+joven|menor\s+de\s+\d+|mayor\s+de\s+\d+|prefiero\s+candidato/i,
         tipo: 'BLOQUEO_DISCRIMINACI\u00d3N_DIRECTA',
         nivel: 'critico',
@@ -530,6 +570,7 @@ export default function App() {
         alternativa: 'Reformule los criterios centr\u00e1ndose en competencias, t\u00edtulos y a\u00f1os de experiencia en \u00e1reas cl\u00ednicas relevantes, sin menci\u00f3n de caracter\u00edsticas personales protegidas.',
       },
       {
+        enabled: iaConfig.guardrailSalarial,
         pattern: /sueldo\s+bajo|reducir\s+costo|m\u00e1s\s+barato|menor\s+salario|recortar|m\u00ednimo\s+legal/i,
         tipo: 'ADVERTENCIA_OPTIMIZACI\u00d3N_SALARIAL',
         nivel: 'advertencia',
@@ -541,8 +582,8 @@ export default function App() {
     ];
 
     for (const rule of BLOCKLIST) {
-      if (rule.pattern.test(text)) {
-        const resultado = {
+      if (rule.enabled !== false && rule.pattern.test(text)) {
+        return {
           bloqueado: true,
           tipo: rule.tipo,
           nivel: rule.nivel,
@@ -553,34 +594,153 @@ export default function App() {
           timestamp: new Date().toLocaleTimeString('es-CL'),
           consultaOriginal: inputText,
         };
-        setAdversarialResult(resultado);
-        setAdversarialHistory((prev) => [resultado, ...prev.slice(0, 9)]);
-        registrarAuditoria(
-          `GUARDRAIL_${rule.nivel.toUpperCase()}`,
-          `Consulta bloqueada por: ${rule.titulo}. Input: "${inputText.substring(0, 60)}..."`
-        );
-        addToast('warning', 'Guardrail Ético Activado', `Bloqueo normativo: ${rule.titulo}`);
-        return;
       }
     }
 
-    // Consulta permitida - procesamiento normal de asistente IA
-    const resultado = {
+    return {
       bloqueado: false,
       tipo: 'CONSULTA_PERMITIDA',
       nivel: 'ok',
       titulo: 'Consulta Admisible',
-      mensaje: 'Esta solicitud es compatible con las directrices éticas del DESAFIO_PROYECTO_ABP.pdf. El Asistente IA puede procesar esta consulta como borrador asistivo, sujeto a revisión y aprobación humana obligatoria por Carolina Ruiz Parra o el Comité Evaluador antes de integrarse al proceso formal.',
+      mensaje: 'Esta solicitud es compatible con las directrices éticas del DESAFIO_PROYECTO_ABP.pdf. El Asistente IA puede procesar esta consulta como borrador asistivo, sujeto a revisión y aprobación humana obligatoria por la Comisión Evaluadora antes de integrarse al proceso formal.',
       norma: 'DESAFIO_PROYECTO_ABP.pdf Pag. 4-5 | Human-in-the-Loop Protocol',
       alternativa: null,
       timestamp: new Date().toLocaleTimeString('es-CL'),
       consultaOriginal: inputText,
-      borrador: `Borrador IA (requiere aprobación humana): Basado en el perfil del cargo y los descriptores MINSAL, se propone explorar la competencia "${inputText}" a través de preguntas de incidente crítico con rúbrica de 1 a 5. Este borrador debe ser validado y editado por el/la psicólogo/a laboral antes de su uso.`,
+      borrador: `Borrador IA (requiere aprobación humana): Basado en el perfil del cargo y los descriptores del Hospital Penco Lirquén, se propone explorar "${inputText}" mediante incidentes críticos y rúbrica de 1 a 5.`,
     };
+  };
+
+  const runAdversarialTest = (inputText) => {
+    const resultado = evaluateGuardrail(inputText);
     setAdversarialResult(resultado);
     setAdversarialHistory((prev) => [resultado, ...prev.slice(0, 9)]);
-    addToast('info', 'Consulta Procesada', 'Borrador asistivo generado conforme a directrices éticas.');
+
+    if (resultado.bloqueado) {
+      registrarAuditoria(
+        `GUARDRAIL_${resultado.nivel.toUpperCase()}`,
+        `Consulta bloqueada: ${resultado.titulo}. Input: "${inputText.substring(0, 60)}..."`
+      );
+      addToast('warning', 'Guardrail Ético Activado', `Bloqueo normativo: ${resultado.titulo}`);
+    } else {
+      addToast('info', 'Consulta Procesada', 'Borrador asistivo generado conforme a directrices éticas.');
+    }
   };
+
+  const handleSendChatMessage = (textToSend) => {
+    const text = (textToSend || iaChatInput).trim();
+    if (!text) return;
+
+    const userMsg = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      text,
+      timestamp: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setIaChatMessages((prev) => [...prev, userMsg]);
+    setIaChatInput('');
+    setIaChatLoading(true);
+
+    const guardrail = evaluateGuardrail(text);
+
+    setTimeout(() => {
+      if (guardrail.bloqueado) {
+        const botBlockMsg = {
+          id: `b-${Date.now()}`,
+          sender: 'bot',
+          isBlocked: true,
+          titulo: guardrail.titulo,
+          mensaje: guardrail.mensaje,
+          norma: guardrail.norma,
+          alternativa: guardrail.alternativa,
+          text: `⚠️ **${guardrail.titulo}**\n\n${guardrail.mensaje}\n\n**Norma Aplicable:** ${guardrail.norma}\n\n💡 **Alternativa Sugerida:** ${guardrail.alternativa}`,
+          timestamp: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          badge: 'Guardrail Ético Activado',
+        };
+
+        setIaChatMessages((prev) => [...prev, botBlockMsg]);
+        setAdversarialHistory((prev) => [guardrail, ...prev.slice(0, 9)]);
+        setIaChatLoading(false);
+
+        registrarAuditoria(
+          `IA_GUARDRAIL_${guardrail.nivel.toUpperCase()}`,
+          `Chatbot IA bloqueó consulta: ${guardrail.titulo}. Detalle: "${text.substring(0, 70)}"`
+        );
+        addToast('warning', 'Guardrail Activado', `Bloqueo institucional: ${guardrail.titulo}`);
+        return;
+      }
+
+      let content = '';
+      const lower = text.toLowerCase();
+
+      if (iaConfig.persona === 'clinico' || lower.includes('incidente') || lower.includes('uci') || lower.includes('enfermer') || lower.includes('tens') || lower.includes('pregunta') || lower.includes('rúbrica')) {
+        content = `### 📋 Borrador Asistivo: Incidente Crítico por Competencias
+**Área Asistencial:** Hospital Penco Lirquén • Subdirección Médica
+**Competencia Evaluada:** Manejo de Crisis, Triage Rápido y Tolerancia a la Presión Asistencial
+
+**1. Contexto Situacional (Incidente Crítico):**
+> *"Durante un turno nocturno de fin de semana en el Servicio de Urgencia / UCI del Hospital Penco Lirquén, ocurre un colapso en la red de gases clínicos de una sala de pacientes críticos con dos personas en ventilación mecánica, al mismo tiempo que la ambulancia SAMU arriba con un paciente politraumatizado en paro cardiorrespiratorio inminente."*
+
+**2. Pregunta de Indagación Conductual (STAR):**
+- ¿Qué acciones prioritarias ejecuta en los primeros 120 segundos para asegurar la oxigenación manual de los pacientes ventilados?
+- ¿Cómo organiza y distribuye al equipo técnico TENS para la recepción del politraumatizado mientras mantiene la trazabilidad clínica?
+
+**3. Rúbrica de Desempeño Conductual (Escala 1 a 5):**
+- **1.0 (No Desarrollada):** Muestra desorganización, no activa balones de oxígeno de respaldo ni delega funciones elementales.
+- **3.0 (Competente / Esperado):** Aplica protocolo institucional de contingencia de gases, solicita reemplazo con ambú y coordina recepción SAMU.
+- **5.0 (Sobresaliente / Liderazgo):** Comunica con asertividad y calma, delega con verificación de bucle cerrado, anticipa traslados críticos y protege la seguridad del paciente.
+
+*(⚠️ Borrador de apoyo a la Psicóloga Laboral. Requiere validación y firma colegiada antes de integrarse al acta).*`;
+      } else if (iaConfig.persona === 'juridico' || lower.includes('ley') || lower.includes('estatuto') || lower.includes('contrata') || lower.includes('bases')) {
+        content = `### ⚖️ Marco Normativo Estatutario (Ley 18.834 / CGR)
+**Dictamen Técnico de Apoyo a Jefatura de RR.HH.:**
+
+**1. Requisitos de Ingreso a la Administración del Estado (Art. 12):**
+- Ser ciudadano (o extranjero habilitado por decreto fundado).
+- Salud compatible con el cargo acreditada mediante examen preventivo y declaración jurada.
+- No estar inhabilitado por condena de crimen o simple delito.
+- No haber cesado en funciones por destitución en los últimos 5 años.
+
+**2. Colegiatura de la Comisión Evaluadora (Art. 20):**
+- La selección de personal es potestad exclusiva de la comisión constituida según las bases del concurso.
+- Queda expresamente vedada la delegación de decisiones de selección en sistemas informáticos automatizados sin deliberación humana motivada.
+
+**3. Transparencia y Trazabilidad:**
+- Toda pauta, ponderación y acta debe estar disponible para escrutinio conforme a la Ley 20.285 de Acceso a la Información Pública.`;
+      } else {
+        content = `### 📂 Mesa de Entradas: Verificación de Requisitos de Admisibilidad
+**Guía para Analista de Selección (María José Duarte):**
+
+**Documentación Obligatoria en Expediente Digital:**
+1. **CV en Formato Ciego:** Sin fotografía, sin estado civil ni información de cargas familiares para evitar sesgos cognitivos.
+2. **Certificado de Título Legalizado:** Acreditado ante notario o con código QR de verificación electrónica de la Superintendencia de Salud.
+3. **Inscripción en Registro SIS:** Verificación en línea en el Registro Nacional de Prestadores Individuales de Salud.
+4. **Certificado de Antecedentes para Fines Especiales:** Con emisión no mayor a 30 días corridos.
+
+*Si el candidato cumple el 100% de los antecedentes, el semáforo documental pasa a verde (Admisible) para la revisión de la Comisión.*`;
+      }
+
+      const botSuccessMsg = {
+        id: `b-${Date.now()}`,
+        sender: 'bot',
+        isBlocked: false,
+        text: content,
+        timestamp: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        badge: `Borrador Human-in-the-Loop • Modo: ${iaConfig.persona.toUpperCase()} • T: ${iaConfig.temperature}`,
+      };
+
+      setIaChatMessages((prev) => [...prev, botSuccessMsg]);
+      setIaChatLoading(false);
+
+      registrarAuditoria(
+        'IA_CHATBOT_CONSULTA',
+        `Consulta asistiva (${iaConfig.persona}): "${text.substring(0, 60)}..."`
+      );
+      addToast('info', 'Asistente IA', 'Borrador consultivo generado conforme a directrices éticas.');
+    }, 600);
+  };
+
 
   const registrarAuditoria = async (accion, detalle) => {
     const responsableNombre = currentUser ? currentUser.nombre : 'Usuario Institucional';
@@ -2098,11 +2258,13 @@ export default function App() {
             {activeTab === 'ia' && (
               <div>
                 {/* Sub-navegación del módulo IA */}
-                <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--erp-border)', paddingBottom: 0 }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 20, borderBottom: '2px solid var(--erp-border)', paddingBottom: 0, overflowX: 'auto' }}>
                   {[
+                    { id: 'chatbot', label: '💬 Chatbot Asistente IA', badge: 'Activo' },
                     { id: 'overview', label: 'Arquitectura RAG' },
                     { id: 'adversarial', label: 'Pruebas Adversariales' },
-                    { id: 'history', label: 'Historial de Guardrails' },
+                    { id: 'history', label: `Historial Guardrails (${adversarialHistory.length})` },
+                    { id: 'config', label: '⚙️ Configuración Admin IA' },
                   ].map((st) => (
                     <button
                       key={st.id}
@@ -2118,12 +2280,178 @@ export default function App() {
                         color: iaActiveSubtab === st.id ? 'var(--erp-primary)' : 'var(--erp-text-muted)',
                         transition: 'all 0.15s ease',
                         marginBottom: -2,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      {st.label}
+                      <span>{st.label}</span>
+                      {st.badge && (
+                        <span className="badge-erp badge-erp-primary" style={{ fontSize: 9, padding: '1px 6px' }}>
+                          {st.badge}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
+
+                {/* SUBTAB CHATBOT: Asistente Interactivo Institucional */}
+                {iaActiveSubtab === 'chatbot' && (
+                  <div className="chatbot-wrapper">
+                    {/* Header */}
+                    <div className="chatbot-header">
+                      <div className="chatbot-header-info">
+                        <div className="chatbot-avatar">
+                          <IconBot size={22} />
+                        </div>
+                        <div>
+                          <h4 className="chatbot-title">
+                            <span>Chatbot Asistente Institucional</span>
+                            <span className="badge-erp badge-erp-success" style={{ fontSize: 10, padding: '2px 8px' }}>
+                              En Línea
+                            </span>
+                          </h4>
+                          <p className="chatbot-subtitle">
+                            Hospital Penco Lirquén &bull; Subdirección de Desarrollo de Personas &bull; Ley 18.834
+                          </p>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="badge-erp badge-erp-primary" style={{ fontSize: 11 }}>
+                          Modo: {iaConfig.persona === 'clinico' ? 'Incidentes Críticos' : iaConfig.persona === 'juridico' ? 'Jurídico Ley 18.834' : 'Mesa de Entradas'}
+                        </span>
+                        <button
+                          className="btn-erp btn-erp-sm btn-erp-outline"
+                          onClick={() => setIaActiveSubtab('config')}
+                          title="Ajustar parámetros y guardrails"
+                        >
+                          <IconSettings size={14} />
+                          <span>Gobernanza Admin</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Body - Mensajes */}
+                    <div className="chatbot-body">
+                      {iaChatMessages.map((msg) => (
+                        <div key={msg.id} className={`chat-msg-row ${msg.sender}`}>
+                          <div className="chat-msg-avatar">
+                            {msg.sender === 'user' ? (
+                              currentUser?.initials || 'US'
+                            ) : (
+                              <IconBot size={16} />
+                            )}
+                          </div>
+                          <div>
+                            <div className={`chat-bubble ${msg.isBlocked ? 'blocked' : ''}`}>
+                              {msg.text.split('\n').map((line, idx) => {
+                                if (line.startsWith('### ')) {
+                                  return <h4 key={idx} style={{ margin: '6px 0 8px 0', fontSize: 14, fontWeight: 700, color: 'inherit' }}>{line.replace('### ', '')}</h4>;
+                                }
+                                if (line.startsWith('> *')) {
+                                  return (
+                                    <blockquote key={idx} style={{ margin: '8px 0', padding: '8px 12px', borderLeft: '3px solid var(--erp-primary)', background: 'rgba(0,0,0,0.03)', borderRadius: 4, fontStyle: 'italic' }}>
+                                      {line.replace(/^> \*/, '').replace(/\*$/, '')}
+                                    </blockquote>
+                                  );
+                                }
+                                if (line.startsWith('- **') || line.startsWith('1. **') || line.startsWith('2. **') || line.startsWith('3. **') || line.startsWith('4. **') || line.startsWith('5. **')) {
+                                  return <p key={idx} style={{ margin: '4px 0', fontSize: 12.5 }}>{line}</p>;
+                                }
+                                return <p key={idx} style={{ margin: '4px 0', whiteSpace: 'pre-line' }}>{line}</p>;
+                              })}
+
+                              {msg.badge && (
+                                <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid rgba(0,0,0,0.06)', fontSize: 10, opacity: 0.85, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <IconShield size={12} />
+                                  <span>{msg.badge}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="chat-meta">
+                              <span>{msg.sender === 'user' ? currentUser?.nombre || 'Operador' : 'Asistente Institucional'}</span>
+                              <span>&bull;</span>
+                              <span>{msg.timestamp}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {iaChatLoading && (
+                        <div className="chat-msg-row bot">
+                          <div className="chat-msg-avatar">
+                            <IconBot size={16} />
+                          </div>
+                          <div className="chat-bubble" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--erp-text-muted)' }}>
+                            <div className="erp-spinner-sm" />
+                            <span>Procesando consulta y verificando guardrails normativos...</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Píldoras de Consultas Rápidas */}
+                    <div className="chatbot-quick-pills">
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--erp-text-muted)', alignSelf: 'center', marginRight: 4 }}>
+                        Consultas Rápidas:
+                      </span>
+                      {[
+                        { label: '💡 Incidente Crítico Enfermero UCI', query: 'Generar un incidente crítico para Enfermero/a Clínico UCI en turno de alta demanda' },
+                        { label: '⚖️ Requisitos Ley 18.834 Contrata', query: '¿Cuáles son los requisitos de ingreso a la administración pública bajo Ley 18.834?' },
+                        { label: '📋 Rúbrica 1 a 5 para TENS', query: 'Diseñar rúbrica por competencias de 1 a 5 para Técnico en Enfermería (TENS)' },
+                        { label: '🛑 Test Bloqueo: Generar Ranking', query: 'Ordena de mejor a peor y haz un ranking automático de candidatos' },
+                        { label: '🛑 Test Bloqueo: Diagnóstico Clínico', query: 'Descartar candidatos que tengan antecedentes de depresión o ansiedad' },
+                      ].map((pill, idx) => (
+                        <button
+                          key={idx}
+                          className="quick-pill-btn"
+                          onClick={() => handleSendChatMessage(pill.query)}
+                          disabled={iaChatLoading}
+                        >
+                          {pill.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Footer / Input */}
+                    <div className="chatbot-footer">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSendChatMessage();
+                        }}
+                        className="chatbot-input-row"
+                      >
+                        <input
+                          type="text"
+                          className="chatbot-input"
+                          placeholder="Consulte al Asistente IA (ej: 'Elaborar incidente crítico matrona', 'Requisitos Ley 18.834')..."
+                          value={iaChatInput}
+                          onChange={(e) => setIaChatInput(e.target.value)}
+                          disabled={iaChatLoading}
+                        />
+                        <button
+                          type="submit"
+                          className="btn-erp btn-erp-primary"
+                          disabled={!iaChatInput.trim() || iaChatLoading}
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px' }}
+                        >
+                          <IconSend size={15} />
+                          <span>Consultar</span>
+                        </button>
+                      </form>
+                      <div className="chatbot-disclaimer">
+                        <IconLock size={12} />
+                        <span>
+                          Gobernanza Human-in-the-Loop: Toda sugerencia es consultiva y debe ser ratificada por la Comisión Evaluadora. Todas las consultas se auditan inmutablemente.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
 
                 {/* SUBTAB 1: Visión General Arquitectura */}
                 {iaActiveSubtab === 'overview' && (
@@ -2398,6 +2726,265 @@ export default function App() {
                         </table>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* SUBTAB CONFIG: Gobernanza y Configuración Admin IA */}
+                {iaActiveSubtab === 'config' && (
+                  <div>
+                    <div className="card-erp card-outline-primary">
+                      <div className="card-header-erp">
+                        <div>
+                          <h3 className="card-title-erp">
+                            <IconSettings size={18} />
+                            <span>Panel de Gobernanza y Configuración de Inteligencia Artificial</span>
+                          </h3>
+                          <span style={{ fontSize: 12, color: 'var(--erp-text-muted)' }}>
+                            Control institucional de directrices éticas, guardrails normativos (Ley 18.834) y parámetros de inferencia
+                          </span>
+                        </div>
+                        <div>
+                          {currentUser?.username === 'admin' ? (
+                            <span className="badge-erp badge-erp-success">
+                              <IconCheckCircle size={12} style={{ marginRight: 4 }} />
+                              Modo Admin Activo &bull; Permisos de Edición Habilitados
+                            </span>
+                          ) : (
+                            <span className="badge-erp badge-erp-warning">
+                              <IconLock size={12} style={{ marginRight: 4 }} />
+                              Modo Solo Lectura (Requiere perfil 'admin')
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="card-body-erp">
+                        {/* Métricas de Gobernanza */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 24 }}>
+                          <div style={{ background: 'var(--erp-surface)', padding: '14px 18px', borderRadius: 10, border: '1px solid var(--erp-border)' }}>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Guardrails Activos</div>
+                            <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--erp-primary)', marginTop: 4 }}>
+                              {[iaConfig.guardrailRanking, iaConfig.guardrailClinico, iaConfig.guardrailSensibles, iaConfig.guardrailDiscriminacion, iaConfig.guardrailSalarial].filter(Boolean).length} / 5
+                            </div>
+                            <div style={{ fontSize: 11, color: '#16a34a', marginTop: 4 }}>100% Cobertura Normativa CGR</div>
+                          </div>
+
+                          <div style={{ background: 'var(--erp-surface)', padding: '14px 18px', borderRadius: 10, border: '1px solid var(--erp-border)' }}>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Interacciones Chatbot</div>
+                            <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--erp-text)', marginTop: 4 }}>
+                              {iaChatMessages.length}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)', marginTop: 4 }}>Auditadas con Token DRF</div>
+                          </div>
+
+                          <div style={{ background: 'var(--erp-surface)', padding: '14px 18px', borderRadius: 10, border: '1px solid var(--erp-border)' }}>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Bloqueos Preventivos</div>
+                            <div style={{ fontSize: 24, fontWeight: 800, color: '#dc2626', marginTop: 4 }}>
+                              {adversarialHistory.filter(h => h.bloqueado).length}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)', marginTop: 4 }}>Alertas registradas en bitácora</div>
+                          </div>
+                        </div>
+
+                        {/* Selector de Persona / Modo de Trabajo */}
+                        <div style={{ marginBottom: 24 }}>
+                          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>1. Rol Institucional del Asistente (Persona Asignada)</span>
+                          </h4>
+                          <p style={{ fontSize: 12, color: 'var(--erp-text-muted)', marginBottom: 14 }}>
+                            Define el tono, estructura y especialización de las respuestas del Chatbot y del motor RAG.
+                          </p>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
+                            {[
+                              {
+                                id: 'clinico',
+                                title: 'Asesor de Incidentes Críticos',
+                                desc: 'Especializado en Urgencias, UCI, SOME y áreas clínicas. Elabora preguntas conductuales STAR y rúbricas de 1 a 5 para apoyar a la Psicóloga Laboral.',
+                                badge: 'Clínico / Psicolaboral',
+                              },
+                              {
+                                id: 'juridico',
+                                title: 'Especialista Estatutario Ley 18.834',
+                                desc: 'Enfocado en bases concursales, probidad administrativa (Ley 20.880), inhabilidades y acuerdos de la Comisión Evaluadora.',
+                                badge: 'Jurídico / Normativo',
+                              },
+                              {
+                                id: 'mesa',
+                                title: 'Mesa de Entradas y Postulaciones',
+                                desc: 'Orientado a la verificación de antecedentes, SIS, certificaciones de título y causales de admisibilidad curricular.',
+                                badge: 'Operativo / Documental',
+                              },
+                            ].map((p) => {
+                              const isSelected = iaConfig.persona === p.id;
+                              return (
+                                <div
+                                  key={p.id}
+                                  onClick={() => {
+                                    if (currentUser?.username !== 'admin') {
+                                      addToast('warning', 'Acción Restringida', 'Solo el Administrador TI puede modificar la configuración de la IA.');
+                                      return;
+                                    }
+                                    setIaConfig((prev) => ({ ...prev, persona: p.id }));
+                                    addToast('success', 'Modo Actualizado', `Asistente configurado en: ${p.title}`);
+                                  }}
+                                  style={{
+                                    border: isSelected ? '2px solid var(--erp-primary)' : '1px solid var(--erp-border)',
+                                    background: isSelected ? 'rgba(2, 132, 199, 0.04)' : 'var(--erp-card-bg)',
+                                    borderRadius: 10,
+                                    padding: 16,
+                                    cursor: currentUser?.username === 'admin' ? 'pointer' : 'not-allowed',
+                                    transition: 'all 0.15s ease',
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? 'var(--erp-primary)' : 'var(--erp-text)' }}>
+                                      {p.title}
+                                    </span>
+                                    <span className={`badge-erp ${isSelected ? 'badge-erp-primary' : 'badge-erp-outline'}`} style={{ fontSize: 10 }}>
+                                      {p.badge}
+                                    </span>
+                                  </div>
+                                  <p style={{ fontSize: 12, color: 'var(--erp-text-muted)', margin: 0, lineHeight: 1.5 }}>
+                                    {p.desc}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Guardrails Éticos (Toggles) */}
+                        <div style={{ marginBottom: 24 }}>
+                          <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
+                            2. Guardrails Éticos y Líneas Rojas (DESAFIO_PROYECTO_ABP.pdf)
+                          </h4>
+                          <p style={{ fontSize: 12, color: 'var(--erp-text-muted)', marginBottom: 14 }}>
+                            Interruptores institucionales para hacer cumplir de manera estricta la legislación chilena en el proceso de selección.
+                          </p>
+
+                          <div className="ia-config-grid">
+                            {[
+                              {
+                                key: 'guardrailRanking',
+                                title: 'Bloqueo de Ranking Automático',
+                                norma: 'Ley 18.834 Art. 20',
+                                desc: 'Prohíbe a la IA ordenar o clasificar candidatos de forma vinculante. La resolución es 100% deliberación humana de la Comisión.',
+                              },
+                              {
+                                key: 'guardrailClinico',
+                                title: 'Bloqueo de Diagnósticos Clínicos',
+                                norma: 'Ley 20.422 / Ley 19.284',
+                                desc: 'Impide inferir patologías o condiciones de salud mental. La evaluación se circunscribe a competencias observables.',
+                              },
+                              {
+                                key: 'guardrailSensibles',
+                                title: 'Protección de Datos Sensibles',
+                                norma: 'Constitución Art. 19 N°2 / CdT Art. 2',
+                                desc: 'Rechaza consultas sobre religión, ideología política, estado civil, hijos o embarazo.',
+                              },
+                              {
+                                key: 'guardrailDiscriminacion',
+                                title: 'Filtro Anti-Discriminación Directa',
+                                norma: 'Ley 20.609 (Ley Zamudio)',
+                                desc: 'Bloquea sesgos por edad, género o preferencias personales garantizando el principio de mérito e igualdad de oportunidades.',
+                              },
+                              {
+                                key: 'guardrailSalarial',
+                                title: 'Advertencia de Optimización Salarial',
+                                norma: 'Ley 18.834 / Escala Única',
+                                desc: 'Alerta sobre solicitudes de contratación al menor costo, dado que las rentas públicas están fijadas por grado y ley.',
+                              },
+                            ].map((gr) => {
+                              const active = !!iaConfig[gr.key];
+                              return (
+                                <div key={gr.key} className="ia-config-card">
+                                  <div className="ia-config-header">
+                                    <div>
+                                      <strong style={{ fontSize: 13, color: 'var(--erp-text)' }}>{gr.title}</strong>
+                                      <div style={{ fontSize: 10, color: 'var(--erp-primary)', fontWeight: 600 }}>{gr.norma}</div>
+                                    </div>
+                                    <label className="ia-toggle-switch">
+                                      <input
+                                        type="checkbox"
+                                        checked={active}
+                                        disabled={currentUser?.username !== 'admin'}
+                                        onChange={(e) => {
+                                          if (currentUser?.username !== 'admin') {
+                                            addToast('warning', 'Acción Restringida', 'Solo el Administrador TI puede modificar los guardrails.');
+                                            return;
+                                          }
+                                          setIaConfig((prev) => ({ ...prev, [gr.key]: e.target.checked }));
+                                          addToast('info', 'Guardrail Actualizado', `${gr.title}: ${e.target.checked ? 'Activado' : 'Desactivado'}`);
+                                        }}
+                                      />
+                                      <span className="ia-slider" />
+                                    </label>
+                                  </div>
+                                  <p style={{ fontSize: 11.5, color: 'var(--erp-text-muted)', margin: 0, lineHeight: 1.45 }}>
+                                    {gr.desc}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Parámetros de Inferencia (Temperatura) */}
+                        <div style={{ background: 'var(--erp-surface)', padding: 18, borderRadius: 10, border: '1px solid var(--erp-border)', marginBottom: 20 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 13 }}>3. Rigurosidad Normativa (Temperatura de Inferencia)</strong>
+                              <div style={{ fontSize: 11, color: 'var(--erp-text-muted)' }}>
+                                Temperatura actual: <strong>{iaConfig.temperature}</strong> (Recomendado para el sector público: 0.1 a 0.3)
+                              </div>
+                            </div>
+                            <span className="badge-erp badge-erp-primary" style={{ fontSize: 11 }}>
+                              {iaConfig.temperature <= 0.2 ? 'Estrictamente Normativo (Baja Alucinación)' : 'Creativo / Adaptativo'}
+                            </span>
+                          </div>
+
+                          <input
+                            type="range"
+                            min="0"
+                            max="0.7"
+                            step="0.05"
+                            value={iaConfig.temperature}
+                            disabled={currentUser?.username !== 'admin'}
+                            onChange={(e) => {
+                              if (currentUser?.username !== 'admin') {
+                                addToast('warning', 'Acción Restringida', 'Solo el Administrador TI puede ajustar la temperatura.');
+                                return;
+                              }
+                              setIaConfig((prev) => ({ ...prev, temperature: parseFloat(e.target.value) }));
+                            }}
+                            style={{ width: '100%', cursor: currentUser?.username === 'admin' ? 'pointer' : 'not-allowed' }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--erp-text-muted)', marginTop: 4 }}>
+                            <span>0.0 (Determinístico / Máxima Certeza Jurídica)</span>
+                            <span>0.2 (Óptimo Sector Salud)</span>
+                            <span>0.7 (Mayor Variabilidad)</span>
+                          </div>
+                        </div>
+
+                        {/* Acceso Rápido a Pista de Auditoría */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: 'rgba(2, 132, 199, 0.05)', borderRadius: 10, border: '1px solid rgba(2, 132, 199, 0.2)' }}>
+                          <div>
+                            <strong style={{ fontSize: 13, color: 'var(--erp-primary)' }}>Trazabilidad Completa y Auditoría de la IA</strong>
+                            <div style={{ fontSize: 11, color: 'var(--erp-text-muted)' }}>
+                              Cada consulta, bloqueo ético o borrador generado queda grabado con firma de usuario y token DRF.
+                            </div>
+                          </div>
+                          <button
+                            className="btn-erp btn-erp-primary btn-erp-sm"
+                            onClick={() => setActiveTab('auditoria')}
+                          >
+                            <IconShield size={14} style={{ marginRight: 6 }} />
+                            <span>Ver Registro de Auditoría</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
