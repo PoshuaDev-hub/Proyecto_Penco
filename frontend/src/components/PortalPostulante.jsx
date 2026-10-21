@@ -411,8 +411,40 @@ export default function PortalPostulante({ token, initialRut = '', onVolver, dar
                 </div>
               </div>
 
-              {/* Banners Condicionales según Estado */}
-              {portalData.subsanacion_solicitada || portalData.estado === 'subsanacion' ? (
+              {/* Banners Condicionales según Estado con Final Coherente */}
+              {portalData.estado === 'aprobada' ? (
+                <div className="portal-status-banner success" style={{ borderLeft: '4px solid var(--erp-success)', background: 'rgba(16, 185, 129, 0.08)' }}>
+                  <IconCheckCircle size={28} style={{ flexShrink: 0, marginTop: 2, color: 'var(--erp-success)' }} />
+                  <div>
+                    <strong style={{ fontSize: 15, color: 'var(--erp-success)' }}>
+                      🎉 Postulación Favorable • Candidato/a Seleccionado/a
+                    </strong>
+                    <p style={{ fontSize: 13, margin: '6px 0 0 0', lineHeight: 1.5 }}>
+                      {portalData.observacion_postulante ||
+                        'La Comisión Calificadora del Hospital Penco Lirquén ha finalizado la evaluación curricular y técnica con resultado favorable. La Subdirección de Gestión de las Personas coordinará el examen de salud compatible y el trámite de la Resolución Exenta de designación.'}
+                    </p>
+                    <span style={{ fontSize: 11.5, opacity: 0.9, marginTop: 6, display: 'inline-block', fontWeight: 600 }}>
+                      Estatuto Administrativo Ley 18.834 &bull; Servicio de Salud Talcahuano
+                    </span>
+                  </div>
+                </div>
+              ) : portalData.estado === 'descartada' ? (
+                <div className="portal-status-banner danger" style={{ borderLeft: '4px solid var(--erp-danger)', background: 'rgba(239, 68, 68, 0.08)' }}>
+                  <IconX size={26} style={{ flexShrink: 0, marginTop: 2, color: 'var(--erp-danger)' }} />
+                  <div>
+                    <strong style={{ fontSize: 14, color: 'var(--erp-danger)' }}>
+                      Notificación de Término de Participación Concursal
+                    </strong>
+                    <p style={{ fontSize: 13, margin: '4px 0 0 0', color: 'var(--erp-text)' }}>
+                      {portalData.observacion_postulante ||
+                        'En conformidad con las bases de la convocatoria Ley 18.834 y la deliberación de la Comisión, sus antecedentes no han continuado a las siguientes fases. Agradecemos su interés y participación en este concurso público.'}
+                    </p>
+                    <span style={{ fontSize: 11.5, opacity: 0.85, marginTop: 4, display: 'inline-block' }}>
+                      Expediente digital custodiado según normativa vigente de archivo público.
+                    </span>
+                  </div>
+                </div>
+              ) : portalData.subsanacion_solicitada || portalData.estado === 'subsanacion' ? (
                 <div className="portal-status-banner warning">
                   <IconAlertTriangle size={24} style={{ flexShrink: 0, marginTop: 2 }} />
                   <div>
@@ -423,6 +455,16 @@ export default function PortalPostulante({ token, initialRut = '', onVolver, dar
                     <span style={{ fontSize: 11.5, opacity: 0.85, marginTop: 4, display: 'inline-block' }}>
                       Puede modificar los campos a continuación y presionar "Guardar y Reenviar Postulación".
                     </span>
+                  </div>
+                </div>
+              ) : portalData.estado === 'preseleccionada' ? (
+                <div className="portal-status-banner success">
+                  <IconCheckCircle size={24} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <strong style={{ fontSize: 14 }}>Expediente Preseleccionado • Habilitado para Entrevistas</strong>
+                    <p style={{ fontSize: 13, margin: '4px 0 0 0' }}>
+                      {portalData.observacion_postulante || 'Ha superado la revisión curricular y el semáforo documental SIS. Su postulación avanza a la fase de entrevistas técnicas y psicolaborales.'}
+                    </p>
                   </div>
                 </div>
               ) : portalData.fecha_envio ? (

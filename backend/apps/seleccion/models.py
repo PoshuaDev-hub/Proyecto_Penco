@@ -35,8 +35,9 @@ class ProcesoSeleccion(models.Model):
     ESTADO_PSICO = 'evaluacion_psicolaboral'
     ESTADO_INFORME = 'informe_directora'
     ESTADO_INTEGRACION = 'integracion'
+    ESTADO_CERRADO = 'cerrado'
 
-    # 9 Etapas oficiales del DESAFIO_PROYECTO_ABP.pdf (Pag. 3)
+    # Etapas normadas del Estatuto Administrativo Ley 18.834 (Hospital Penco Lirquén)
     ESTADO_CHOICES = [
         (ESTADO_SOLICITUD,   'Solicitud de Llamado'),
         (ESTADO_PERFIL,      'Perfil del Cargo'),
@@ -46,7 +47,8 @@ class ProcesoSeleccion(models.Model):
         (ESTADO_ENTREVISTAS, 'Entrevistas Tecnicas'),
         (ESTADO_PSICO,       'Evaluacion Psicolaboral'),
         (ESTADO_INFORME,     'Informe a la Directora'),
-        (ESTADO_INTEGRACION, 'Integracion y Cierre'),
+        (ESTADO_INTEGRACION, 'Integracion y Nombramiento'),
+        (ESTADO_CERRADO,     'Proceso Concluido y Tramitado'),
     ]
 
     perfil_cargo = models.ForeignKey(
